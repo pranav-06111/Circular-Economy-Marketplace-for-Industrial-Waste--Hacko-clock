@@ -1,4 +1,6 @@
 import { User } from './models/User.js';
+import { WasteListing } from './models/WasteListing.js';
+import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 
 const buyersData = [
@@ -34,6 +36,69 @@ export const seedDatabase = async () => {
       console.log('Database explicitly seeded with 12 generic circular economy buyers.');
     } else {
         console.log(`Database already has ${buyerCount} buyers seeded.`);
+    }
+
+    // Seed sample listings
+    const listingCount = await WasteListing.countDocuments();
+    if (listingCount === 0) {
+      console.log('Seeding sample waste listings...');
+      
+      // Get or create a seller
+      let seller = await User.findOne({ role: 'seller' });
+      if (!seller) {
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash('password123', salt);
+        seller = await User.create({
+          name: 'Demo Seller',
+          companyName: 'EcoWastes India',
+          email: 'seller@ecowastes.in',
+          password: hashedPassword,
+          location: 'Pune',
+          role: 'seller',
+          industryType: 'Manufacturing',
+          phone: '+91 9988776655'
+        });
+      }
+
+      const sampleListings = [
+        {
+          seller: seller._id,
+          wasteType: 'Plastic Waste',
+          description: 'High-quality HDPE plastic scrap from manufacturing process.',
+          quantity: 5,
+          unit: 'tonnes',
+          frequency: 'Monthly',
+          location: 'Pune, Maharashtra',
+          physicalForm: 'Baled',
+          status: 'Active'
+        },
+        {
+          seller: seller._id,
+          wasteType: 'Metal Scrap',
+          description: 'Mixed aluminium scrap including cans and foil.',
+          quantity: 500,
+          unit: 'kg',
+          frequency: 'One-time',
+          location: 'Mumbai, Maharashtra',
+          physicalForm: 'Loose',
+          status: 'Active'
+        },
+        {
+          seller: seller._id,
+          wasteType: 'Hazardous Chemical Waste',
+          description: 'Spent solvents from industrial cleaning operations.',
+          quantity: 200,
+          unit: 'litres',
+          frequency: 'Weekly',
+          location: 'Ankleshwar, Gujarat',
+          physicalForm: 'Liquid',
+          isHazardous: true,
+          status: 'Active'
+        }
+      ];
+
+      await WasteListing.insertMany(sampleListings);
+      console.log('✅ Sample waste listings seeded successfully.');
     }
   } catch (e) {
     console.error('Error seeding DB:', e);

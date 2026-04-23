@@ -19,19 +19,23 @@ async function startServer() {
   app.use(express.json());
 
   // Connect to MongoDB
-  // NOTE: This uses process.env.MONGODB_URI which should be set to your Railway MongoDB Private or Public URL
   try {
-    const mongoUri = process.env.MONGODB_URI;
+    let mongoUri = process.env.MONGODB_URI;
+    
     if (!mongoUri || mongoUri === 'your-mongodb-uri') {
-      console.warn('⚠️ MONGODB_URI is not defined in environment variables. Please set it to your Railway MongoDB URI.');
-    } else {
-      mongoose.set('strictQuery', false);
-      await mongoose.connect(mongoUri);
-      console.log('✅ Connected to MongoDB (Railway deployment)');
-      
-      // Run seed logic
-      await seedDatabase();
+      console.warn('⚠️ MONGODB_URI is not defined. Initializing MongoDB Memory Server for development...');
+      const { MongoMemoryServer } = await import('mongodb-memory-server');
+      const mongod = await MongoMemoryServer.create();
+      mongoUri = mongod.getUri();
+      console.log('✨ MongoDB Memory Server started at:', mongoUri);
     }
+
+    mongoose.set('strictQuery', false);
+    await mongoose.connect(mongoUri);
+    console.log('✅ Connected to MongoDB');
+    
+    // Run seed logic
+    await seedDatabase();
   } catch (err) {
     console.error('❌ Failed to connect to MongoDB:', err);
   }

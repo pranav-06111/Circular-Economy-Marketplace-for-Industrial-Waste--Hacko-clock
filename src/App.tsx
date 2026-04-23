@@ -10,6 +10,7 @@ import LandingPage from './pages/LandingPage';
 import Login from './pages/Login';
 import BuyerDashboard from './pages/BuyerDashboard';
 import SellerDashboard from './pages/SellerDashboard';
+import Dashboard from './pages/Dashboard';
 import BuyerMatches from './pages/BuyerMatches';
 import Offload from './pages/Offload';
 import Layout from './components/Layout';
@@ -35,8 +36,8 @@ export default function App() {
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<Login setAuth={setIsAuthenticated} />} />
+        <Route path="/dashboard" element={isAuthenticated ? <Dashboard /> : <Navigate to="/login" />} />
         <Route path="/" element={isAuthenticated ? <Layout setAuth={setIsAuthenticated} /> : <Navigate to="/login" />}>
-          <Route path="dashboard" element={<SellerDashboard />} />
           <Route path="buyer-dashboard" element={<BuyerDashboard />} />
           <Route path="matches" element={<BuyerMatches />} />
           <Route path="offload" element={<Offload />} />
