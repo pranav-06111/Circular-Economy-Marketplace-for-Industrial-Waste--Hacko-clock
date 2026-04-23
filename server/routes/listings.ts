@@ -2,6 +2,7 @@ import express, { Request, Response } from 'express';
 import multer from 'multer';
 import { WasteListing } from '../models/WasteListing.js';
 import { ESGRecord } from '../models/ESGRecord.js';
+import { Match } from '../models/Match.js';
 import { User } from '../models/User.js';
 import { authenticate, authorizeRole, AuthRequest } from '../middleware/auth.js';
 import { analyzeWaste, getSmartMatches, checkCompliance } from '../services/ai.service.js';
@@ -210,6 +211,45 @@ router.get('/:id/matches', authenticate, async (req: AuthRequest, res: Response)
     } catch (error) {
       console.error('Matches fetch error:', error);
       res.status(500).json({ error: 'Failed to generate matches' });
+    }
+});
+
+router.post('/:id/complete-match', authenticate, async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+      const { buyerId, matchScore, reason, suggestedUseCase } = req.body;
+      const listing = await (WasteListing as any).findById(req.params.id);
+      
+      if (!listing) {
+        res.status(404).json({ error: 'Listing not found' });
+        return;
+      }
+
+      // 1. Create Match Record
+      const match = new Match({
+        listing: listing._id,
+        buyer: buyerId,
+        matchScore,
+        reason,
+        suggestedUseCase,
+        status: 'Accepted'
+      });
+
+      // 2. Generate Blockchain Anchor (Demo)
+      const timestamp = new Date().toISOString();
+      const dataToHash = `${match._id}-${timestamp}-${listing._id}`;
+      const hash = CryptoJS.SHA256(dataToHash).toString(CryptoJS.enc.Hex);
+      match.blockchainHash = hash;
+
+      await match.save();
+
+      // 3. Update Listing Status
+      listing.status = 'Matched';
+      await listing.save();
+
+      res.status(200).json({ success: true, match });
+    } catch (error) {
+      console.error('Complete match error:', error);
+      res.status(500).json({ error: 'Failed to complete match' });
     }
 });
 

@@ -1,54 +1,64 @@
-import { GoogleGenAI, Type } from '@google/genai';
+import { GoogleGenAI } from '@google/genai';
 import dotenv from 'dotenv';
 dotenv.config();
 
-let ai: GoogleGenAI | null = null;
-if (process.env.GEMINI_API_KEY) {
-  ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-}
+const genAI = process.env.GEMINI_API_KEY ? new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY }) : null;
 
-export async function analyzeWaste(photoBase64s: string[], formData: any) {
-  if (!ai) return getDefaultAnalysis();
+/**
+ * analyzeWaste(photoBase64, processDescription)
+ * Robustly handles industrial waste analysis with regulatory context.
+ */
+export async function analyzeWaste(photoOrPhotos: string | string[], descriptionOrForm: any) {
+  if (!genAI) return getDefaultAnalysis();
 
   try {
-    const parts: any[] = [];
-    if (photoBase64s && photoBase64s.length > 0) {
-      for (const photo of photoBase64s) {
-        if (photo.startsWith('data:')) {
-          const mimeType = photo.split(';')[0].split(':')[1];
-          const data = photo.split(',')[1];
-          parts.push({ inlineData: { mimeType, data } });
-        }
-      }
-    }
+    let photoBase64 = Array.isArray(photoOrPhotos) ? photoOrPhotos[0] : photoOrPhotos;
+    let processDescription = typeof descriptionOrForm === 'string' ? descriptionOrForm : (descriptionOrForm.processDescription || descriptionOrForm.description || JSON.stringify(descriptionOrForm));
+
+    const systemPrompt = `You are an expert industrial waste auditor in India. 
+    Reference the "Hazardous and Other Wastes (Management and Transboundary Movement) Rules, 2016".
+    Flag if the waste matches chemical sludge, solvents, e-waste, or heavy metals.
+    Analyze the provided image and description.
     
-    parts.push({
-      text: `Analyze this industrial waste. 
-      Form Data provided by user: ${JSON.stringify(formData)}
-      Reference the Hazardous Waste Rules 2016 Schedules, SWM Rules 2016, Plastic Waste Rules, BMW Rules 2016, Battery Rules 2022.
-      Determine inferred composition, hazardous level (Low/Medium/High), key chemicals, and regulatory flags (applicable rules/schedules).`
-    });
+    Return ONLY a JSON object with this structure:
+    {
+      "inferredComposition": "Description of materials",
+      "hazardousLevel": "Low" | "Medium" | "High",
+      "keyChemicals": ["chemical1", "chemical2"],
+      "confidence": 0.0 to 1.0,
+      "regulatoryNotes": "Detailed notes referencing specific schedules/rules",
+      "regulatoryFlags": ["Rule 1", "Rule 2"] 
+    }`;
 
-    const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
-      contents: { parts },
-      config: {
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            inferredComposition: { type: Type.OBJECT, description: "Key-value pair of materials and estimated percentages" },
-            hazardousLevel: { type: Type.STRING, description: "One of: Low, Medium, High" },
-            keyChemicals: { type: Type.ARRAY, items: { type: Type.STRING } },
-            confidenceScore: { type: Type.NUMBER, description: "Confidence score 0.0 to 1.0" },
-            regulatoryFlags: { type: Type.ARRAY, items: { type: Type.STRING } }
-          },
-          required: ["inferredComposition", "hazardousLevel", "keyChemicals", "confidenceScore", "regulatoryFlags"]
+    const promptText = `Description: ${processDescription} \nFull Data: ${typeof descriptionOrForm === 'object' ? JSON.stringify(descriptionOrForm) : ''}`;
+    
+    const parts: any[] = [{ text: systemPrompt + "\n\n" + promptText }];
+
+    if (photoBase64 && photoBase64.startsWith('data:')) {
+      const mimeType = photoBase64.split(';')[0].split(':')[1];
+      const data = photoBase64.split(',')[1];
+      parts.push({
+        inlineData: {
+          mimeType,
+          data
         }
-      }
+      });
+    }
+
+    const response = await genAI.models.generateContent({
+      model: "gemini-flash-latest",
+      contents: [{ role: 'user', parts }]
     });
 
-    return JSON.parse(response.text || "{}");
+    const text = response.text || "";
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) return getDefaultAnalysis();
+    
+    const parsed = JSON.parse(jsonMatch[0]);
+    if (!parsed.regulatoryFlags && parsed.regulatoryNotes) {
+      parsed.regulatoryFlags = [parsed.regulatoryNotes];
+    }
+    return parsed;
   } catch (error) {
     console.error("analyzeWaste error:", error);
     return getDefaultAnalysis();
@@ -57,50 +67,41 @@ export async function analyzeWaste(photoBase64s: string[], formData: any) {
 
 function getDefaultAnalysis() {
   return {
-    inferredComposition: { "Unknown": 100 },
-    hazardousLevel: "Low",
+    inferredComposition: "Unknown industrial byproduct",
+    hazardousLevel: "Medium",
     keyChemicals: [],
-    confidenceScore: 0,
+    confidence: 0,
+    regulatoryNotes: "Manual audit recommended under HW Rules 2016.",
     regulatoryFlags: ["Manual verification required."]
   };
 }
 
 export async function getSmartMatches(wasteData: any, buyerProfiles: any[]) {
-  if (!ai) return [];
+  if (!genAI) return [];
 
   try {
-    const prompt = `Find the top 5 smart matches for this waste listing against the array of buyer profiles.
-    Waste Data: ${JSON.stringify(wasteData)}
-    Buyer Profiles: ${JSON.stringify(buyerProfiles)}
-    Evaluate purely on circular economy compatibility, location, and waste types accepted.
-    CRITICAL: You must perform a regulatory compatibility check. Hazardous waste MUST ONLY be matched with buyers who indicate they have licenses or explicitly accept hazardous waste.
-    Factor in wasteType compatibility with buyer industries heavily.`;
+    const prompt = `Rank the top 5 matches for this waste against the buyer profiles.
+    Waste: ${JSON.stringify(wasteData)}
+    Buyers: ${JSON.stringify(buyerProfiles)}
+    
+    Return ONLY a JSON array of top 5 matches:
+    [{
+      "wasteId": "string",
+      "buyerId": "string",
+      "compatibilityScore": 0-100,
+      "reason": "1-2 sentences explaining compatibility",
+      "suggestedUseCase": "How they will use it",
+      "estimatedMonthlyVolume": "string"
+    }]`;
 
-    const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
-      contents: prompt,
-      config: {
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: Type.ARRAY,
-          items: {
-            type: Type.OBJECT,
-            properties: {
-              wasteId: { type: Type.STRING, description: "ID of the waste listing being matched" },
-              buyerId: { type: Type.STRING },
-              buyerName: { type: Type.STRING },
-              compatibilityScore: { type: Type.NUMBER, description: "1-100 score" },
-              reason: { type: Type.STRING, description: "1-2 sentences explaining the match, reference regulatory compatibility if applicable." },
-              suggestedUseCase: { type: Type.STRING },
-              estimatedMonthlyVolume: { type: Type.STRING }
-            },
-            required: ["wasteId", "buyerId", "buyerName", "compatibilityScore", "reason", "suggestedUseCase", "estimatedMonthlyVolume"]
-          }
-        }
-      }
+    const response = await genAI.models.generateContent({
+      model: "gemini-flash-latest",
+      contents: [{ role: 'user', parts: [{ text: prompt }] }]
     });
 
-    return JSON.parse(response.text || "[]");
+    const text = response.text || "";
+    const jsonMatch = text.match(/\[[\s\S]*\]/);
+    return jsonMatch ? JSON.parse(jsonMatch[0]) : [];
   } catch (error) {
     console.error("getSmartMatches error:", error);
     return [];
@@ -108,31 +109,28 @@ export async function getSmartMatches(wasteData: any, buyerProfiles: any[]) {
 }
 
 export async function checkCompliance(wasteData: any) {
-  if (!ai) return getDefaultCompliance();
+  if (!genAI) return getDefaultCompliance();
 
   try {
-    const prompt = `Check compliance for this waste data based on India's Hazardous Waste Rules 2016.
-    Waste Data: ${JSON.stringify(wasteData)}`;
+    const prompt = `Check compliance for this waste under Indian environmental laws (CPCB/SPCB).
+    Waste Data: ${JSON.stringify(wasteData)}
+    
+    Return ONLY a JSON object:
+    {
+      "isHazardous": boolean,
+      "permitsRequired": ["string"],
+      "transportRestrictions": "string",
+      "esgImpact": "string"
+    }`;
 
-    const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
-      contents: prompt,
-      config: {
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            isHazardous: { type: Type.BOOLEAN },
-            permitsRequired: { type: Type.ARRAY, items: { type: Type.STRING } },
-            transportRestrictions: { type: Type.STRING },
-            esgImpact: { type: Type.STRING }
-          },
-          required: ["isHazardous", "permitsRequired", "transportRestrictions", "esgImpact"]
-        }
-      }
+    const response = await genAI.models.generateContent({
+      model: "gemini-flash-latest",
+      contents: [{ role: 'user', parts: [{ text: prompt }] }]
     });
 
-    return JSON.parse(response.text || "{}");
+    const text = response.text || "";
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    return jsonMatch ? JSON.parse(jsonMatch[0]) : getDefaultCompliance();
   } catch (error) {
     console.error("checkCompliance error:", error);
     return getDefaultCompliance();
@@ -142,8 +140,8 @@ export async function checkCompliance(wasteData: any) {
 function getDefaultCompliance() {
   return {
     isHazardous: false,
-    permitsRequired: ["Standard Transport Permit"],
-    transportRestrictions: "Standard handling recommended.",
-    esgImpact: "Neutral footprint impact calculated statically."
+    permitsRequired: ["Form 3 (HW Rules 2016)"],
+    transportRestrictions: "Manifest system (Form 10) required if hazardous.",
+    esgImpact: "Potential reduction in virgin resource extraction."
   };
 }

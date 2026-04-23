@@ -1,6 +1,9 @@
 "use client"
 
-import React from "react"
+import React, { useState, useEffect } from "react"
+import { useNavigate } from "react-router-dom"
+import axios from "axios"
+import toast from "react-hot-toast"
 import {
   Home,
   Package,
@@ -12,27 +15,13 @@ import {
   Leaf,
   DollarSign,
   LucideIcon,
+  Plus,
 } from "lucide-react"
-
-type SidebarItem = {
-  icon: LucideIcon
-  label: string
-}
-
-const sidebarItems: SidebarItem[] = [
-  { icon: Home, label: "Dashboard" },
-  { icon: Package, label: "Waste Listings" },
-  { icon: TrendingUp, label: "Smart Matches" },
-  { icon: Users, label: "Buyers" },
-  { icon: Truck, label: "Logistics" },
-  { icon: BarChart3, label: "Analytics" },
-  { icon: Settings, label: "Compliance" },
-]
 
 type CardProps = {
   icon: LucideIcon
   title: string
-  value: string
+  value: string | number
   sub: string
 }
 
@@ -52,40 +41,53 @@ const Card: React.FC<CardProps> = ({ icon: Icon, title, value, sub }) => {
 }
 
 const Dashboard: React.FC = () => {
+  const navigate = useNavigate()
+  const [listings, setListings] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchMyListings = async () => {
+      try {
+        const token = localStorage.getItem('token')
+        const res = await axios.get('/api/listings/my', {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+        setListings(res.data.listings)
+      } catch (error: any) {
+        console.error("Failed to fetch listings:", error)
+        toast.error(`Error: ${error.response?.status || 'Unknown'} - ${error.response?.data?.error || error.message}`)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchMyListings()
+  }, [])
+
+  // Calculate dynamic stats
+  const totalQuantity = listings.reduce((acc, curr) => acc + Number(curr.quantity || 0), 0)
+  const totalCo2 = listings.reduce((acc, curr) => acc + Number(curr.co2Savings || 0), 0)
+  const estRevenue = listings.reduce((acc, curr) => acc + Number(curr.logisticsEstimate || 0), 0)
+  const activeListings = listings.filter(l => l.status === 'Active' || l.status === 'Available').length
+
   return (
-    <div className="flex min-h-screen bg-gradient-to-br from-gray-50 to-emerald-50 dark:from-gray-950 dark:to-emerald-950/30 text-gray-900 dark:text-gray-100 font-sans">
-
-      {/* Sidebar */}
-      <aside className="w-64 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 p-4">
-        <h2 className="text-xl font-bold mb-6 text-emerald-600 flex items-center gap-2">
-          <Leaf className="w-6 h-6" />
-          EcoMatch
-        </h2>
-
-        <div className="space-y-2">
-          {sidebarItems.map((item, i) => (
-            <button
-              key={i}
-              className="flex items-center gap-3 w-full p-3 rounded-lg hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition text-gray-600 dark:text-gray-400 hover:text-emerald-600 dark:hover:text-emerald-400"
-            >
-              <item.icon className="w-5 h-5" />
-              <span className="text-sm font-medium">{item.label}</span>
-            </button>
-          ))}
-        </div>
-      </aside>
-
-      {/* Main Content */}
-      <main className="flex-1 p-6">
+    <div className="max-w-7xl mx-auto space-y-6">
 
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold">
-            Waste Intelligence Dashboard
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400">
-            Track, match, and monetize your industrial waste
-          </p>
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 gap-4">
+          <div>
+            <h1 className="text-3xl font-bold">
+              Waste Intelligence Dashboard
+            </h1>
+            <p className="text-gray-600 dark:text-gray-400">
+              Track, match, and monetize your industrial waste
+            </p>
+          </div>
+          <button 
+            onClick={() => navigate('/offload')}
+            className="bg-emerald-500 hover:bg-emerald-400 text-slate-900 font-bold px-6 py-2.5 rounded-xl transition-all shadow-sm flex items-center"
+          >
+            <Plus size={20} className="mr-2" /> List New Waste
+          </button>
         </div>
 
         {/* Stats */}
@@ -93,66 +95,82 @@ const Dashboard: React.FC = () => {
           <Card
             icon={Package}
             title="Total Waste Listed"
-            value="1,243 tons"
-            sub="+12% this week"
+            value={`${totalQuantity.toFixed(1)} units`}
+            sub="Lifetime volume"
           />
           <Card
             icon={TrendingUp}
-            title="Active Matches"
-            value="89"
-            sub="+5 today"
+            title="Active Listings"
+            value={activeListings}
+            sub="Currently available"
           />
           <Card
             icon={Leaf}
             title="CO₂ Saved"
-            value="14.2k tons"
+            value={`${totalCo2.toFixed(1)} tons`}
             sub="Environmental impact"
           />
           <Card
             icon={DollarSign}
-            title="Revenue Generated"
-            value="₹4.2M"
-            sub="From waste trading"
+            title="Est. Logistics Value"
+            value={`₹${estRevenue.toLocaleString()}`}
+            sub="From AI logistics"
           />
         </div>
 
         {/* Content */}
         <div className="grid lg:grid-cols-3 gap-6">
 
-          {/* Recent Activity */}
+          {/* My Listings */}
           <div className="lg:col-span-2 bg-white dark:bg-gray-900 p-6 rounded-xl border border-gray-200 dark:border-gray-800">
-            <h2 className="text-lg font-semibold mb-4">
-              Recent Activity
+            <h2 className="text-lg font-semibold mb-4 flex justify-between items-center">
+              <span>My Recent Listings</span>
             </h2>
 
-            <ul className="space-y-4 text-sm text-gray-700 dark:text-gray-300">
-              <li className="flex items-center gap-3"><div className="w-2 h-2 rounded-full bg-emerald-500"></div>Plastic waste matched with Chennai recycler</li>
-              <li className="flex items-center gap-3"><div className="w-2 h-2 rounded-full bg-emerald-500"></div>Metal scrap sold to JSW</li>
-              <li className="flex items-center gap-3"><div className="w-2 h-2 rounded-full bg-emerald-500"></div>New buyer registered from Bangalore</li>
-              <li className="flex items-center gap-3"><div className="w-2 h-2 rounded-full bg-emerald-500"></div>Compliance verified for chemical batch</li>
-              <li className="flex items-center gap-3"><div className="w-2 h-2 rounded-full bg-emerald-500"></div>Logistics scheduled for pickup</li>
-            </ul>
+            {loading ? (
+              <div className="text-sm text-slate-500 py-4">Loading your data...</div>
+            ) : listings.length === 0 ? (
+              <div className="text-sm text-slate-500 py-8 text-center border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-xl">
+                You haven't listed any waste yet.<br/>
+                <button onClick={() => navigate('/offload')} className="mt-2 text-emerald-500 hover:underline">Click here to start.</button>
+              </div>
+            ) : (
+              <ul className="space-y-4">
+                {listings.slice(0, 5).map((listing, i) => (
+                  <li key={i} className="flex flex-col md:flex-row md:items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-100 dark:border-slate-800 gap-4">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-2 h-2 rounded-full ${listing.status === 'Matched' ? 'bg-amber-500' : 'bg-emerald-500'}`}></div>
+                      <div>
+                        <div className="font-semibold text-slate-900 dark:text-white">{listing.wasteType}</div>
+                        <div className="text-xs text-slate-500">{listing.quantity} {listing.unit} • {listing.location}</div>
+                      </div>
+                    </div>
+                    <div className="text-xs text-right">
+                       <span className="bg-white dark:bg-slate-900 px-2 py-1 rounded border border-slate-200 dark:border-slate-700 shadow-sm block mb-1">
+                         {listing.status || 'Active'}
+                       </span>
+                       <span className="text-emerald-500 font-medium">{listing.co2Savings}t CO₂</span>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
 
           {/* Right Side */}
           <div className="space-y-6">
 
-            {/* AI Matches */}
+            {/* Smart Actions */}
             <div className="bg-white dark:bg-gray-900 p-6 rounded-xl border border-gray-200 dark:border-gray-800">
               <h2 className="text-lg font-semibold mb-4">
-                Smart AI Matches
+                Smart Actions
               </h2>
 
-              <div className="space-y-3 text-sm">
-                <div className="p-3 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-900/30">
-                  <div className="font-medium text-gray-900 dark:text-gray-100">Plastic Waste → Cement Industry</div>
-                  <div className="text-xs text-gray-500 mt-1">92% match • 120 km</div>
-                </div>
-
-                <div className="p-3 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-900/30">
-                  <div className="font-medium text-gray-900 dark:text-gray-100">Metal Scrap → Steel Plant</div>
-                  <div className="text-xs text-gray-500 mt-1">96% match • 80 km</div>
-                </div>
+              <div className="space-y-3">
+                <button onClick={() => navigate('/ai-matcher')} className="w-full p-4 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-900/30 text-left hover:scale-[1.02] transition-transform">
+                  <div className="font-bold text-emerald-700 dark:text-emerald-400 flex items-center"><TrendingUp size={16} className="mr-2"/> AI Matcher</div>
+                  <div className="text-xs text-emerald-600/80 dark:text-emerald-400/80 mt-1">Find buyers instantly for your listings.</div>
+                </button>
               </div>
             </div>
 
@@ -164,24 +182,22 @@ const Dashboard: React.FC = () => {
 
               <div className="space-y-3 text-sm font-medium">
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-600 dark:text-gray-400">Approved</span>
-                  <span className="text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-1 rounded-md">3</span>
+                  <span className="text-gray-600 dark:text-gray-400">Hazardous Listings</span>
+                  <span className="text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-900/30 px-2 py-1 rounded-md">
+                    {listings.filter(l => l.isHazardous).length}
+                  </span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-600 dark:text-gray-400">Pending</span>
-                  <span className="text-yellow-600 dark:text-yellow-400 bg-yellow-50 dark:bg-yellow-900/30 px-2 py-1 rounded-md">1</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600 dark:text-gray-400">Rejected</span>
-                  <span className="text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/30 px-2 py-1 rounded-md">0</span>
+                  <span className="text-gray-600 dark:text-gray-400">Non-Hazardous</span>
+                  <span className="text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-1 rounded-md">
+                    {listings.filter(l => !l.isHazardous).length}
+                  </span>
                 </div>
               </div>
             </div>
-
           </div>
         </div>
 
-      </main>
     </div>
   )
 }

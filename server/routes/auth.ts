@@ -63,6 +63,13 @@ router.post('/login', async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
+    // Allow changing role on login to facilitate testing both sides
+    const requestedRole = req.body.role;
+    if (requestedRole && user.role !== requestedRole && requestedRole !== 'both') {
+      user.role = requestedRole;
+      await user.save();
+    }
+
     const token = jwt.sign({ userId: user._id, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
     res.status(200).json({ token, user: { id: user._id, name: user.name, companyName: user.companyName, email: user.email, industryType: user.industryType, role: user.role } });
   } catch (error) {
@@ -107,11 +114,26 @@ router.post('/google', async (req: Request, res: Response): Promise<void> => {
     let user = await User.findOne({ $or: [{ googleId }, { email }] } as any);
 
     if (user) {
+      let updated = false;
+      
+      // Update role to what they selected on login to make testing easier
+      if (role && user.role !== role && role !== 'both') {
+        user.role = role;
+        updated = true;
+      }
+
       // Link Google account if user exists but hasn't linked Google yet
       if (!user.googleId) {
         user.googleId = googleId;
         user.authProvider = 'google';
-        if (picture) user.avatar = picture;
+        updated = true;
+      }
+      if (picture && !user.avatar) {
+        user.avatar = picture;
+        updated = true;
+      }
+      
+      if (updated) {
         await user.save();
       }
     } else {

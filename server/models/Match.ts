@@ -5,6 +5,9 @@ const MatchSchema = new mongoose.Schema({
   buyer: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   status: { type: String, enum: ['Pending', 'Accepted', 'Rejected'], default: 'Pending' },
   matchScore: { type: Number }, // AI predicted match score (0-100)
+  reason: { type: String },
+  suggestedUseCase: { type: String },
+  blockchainHash: { type: String },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }
 });

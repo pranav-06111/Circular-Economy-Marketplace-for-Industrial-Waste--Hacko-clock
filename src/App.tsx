@@ -12,6 +12,7 @@ import BuyerDashboard from './pages/BuyerDashboard';
 import SellerDashboard from './pages/SellerDashboard';
 import Dashboard from './pages/Dashboard';
 import BuyerMatches from './pages/BuyerMatches';
+import AiMatcher from './pages/AiMatcher';
 import Offload from './pages/Offload';
 import Layout from './components/Layout';
 
@@ -36,10 +37,11 @@ export default function App() {
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<Login setAuth={setIsAuthenticated} />} />
-        <Route path="/dashboard" element={isAuthenticated ? <Dashboard /> : <Navigate to="/login" />} />
         <Route path="/" element={isAuthenticated ? <Layout setAuth={setIsAuthenticated} /> : <Navigate to="/login" />}>
+          <Route path="dashboard" element={<Dashboard />} />
           <Route path="buyer-dashboard" element={<BuyerDashboard />} />
           <Route path="matches" element={<BuyerMatches />} />
+          <Route path="ai-matcher" element={<AiMatcher />} />
           <Route path="offload" element={<Offload />} />
         </Route>
       </Routes>

@@ -103,7 +103,9 @@ export default function Login({ setAuth }: { setAuth: (val: boolean) => void }) 
 
     try {
       const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register';
-      const payload = isLogin ? { email: formData.email, password: formData.password } : formData;
+      const payload = isLogin 
+        ? { email: formData.email, password: formData.password, role: formData.role } 
+        : formData;
       const res = await axios.post(endpoint, payload);
       
       localStorage.setItem('token', res.data.token);

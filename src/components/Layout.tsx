@@ -1,5 +1,5 @@
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, LogOut, PackagePlus, Leaf, Search, Zap } from 'lucide-react';
+import { LayoutDashboard, LogOut, PackagePlus, Leaf, Search, Zap, Activity } from 'lucide-react';
 
 export default function Layout({ setAuth }: { setAuth: (val: boolean) => void }) {
   const navigate = useNavigate();
@@ -20,12 +20,14 @@ export default function Layout({ setAuth }: { setAuth: (val: boolean) => void })
   
   const sellerItems = [
     { name: 'My Listings', path: '/dashboard', icon: LayoutDashboard },
+    { name: 'AI Matcher', path: '/ai-matcher', icon: Zap },
     { name: 'List Waste', path: '/offload', icon: PackagePlus },
   ];
 
   const buyerItems = [
     { name: 'Browse Waste', path: '/buyer-dashboard', icon: Search },
-    { name: 'My Matches', path: '/matches', icon: Zap },
+    { name: 'AI Matcher', path: '/ai-matcher', icon: Zap },
+    { name: 'My Matches', path: '/matches', icon: Activity },
   ];
   
   if (role === 'buyer') {

@@ -9,6 +9,17 @@ export const CITIES: Record<string, { lat: number; lon: number }> = {
   "surat": { lat: 21.1702, lon: 72.8311 },
   "pune": { lat: 18.5204, lon: 73.8567 },
   "jaipur": { lat: 26.9124, lon: 75.7873 },
+  "lucknow": { lat: 26.8467, lon: 80.9462 },
+  "kanpur": { lat: 26.4499, lon: 80.3319 },
+  "nagpur": { lat: 21.1458, lon: 79.0882 },
+  "indore": { lat: 22.7196, lon: 75.8577 },
+  "thane": { lat: 19.2183, lon: 72.9781 },
+  "bhopal": { lat: 23.2599, lon: 77.4126 },
+  "visakhapatnam": { lat: 17.6868, lon: 83.2185 },
+  "patna": { lat: 25.5941, lon: 85.1376 },
+  "vadodara": { lat: 22.3072, lon: 73.1812 },
+  "ghaziabad": { lat: 28.6692, lon: 77.4538 },
+  "ludhiana": { lat: 30.9010, lon: 75.8573 },
   "jamshedpur": { lat: 22.8046, lon: 86.2029 }
 };
 
@@ -36,33 +47,46 @@ function haversine(lat1: number, lon1: number, lat2: number, lon2: number) {
   return R * c; // Distance in km
 }
 
-export function calculateImpact(fromCity: string, toCity: string, quantityTons: number, wasteType: string) {
+/**
+ * calculateImpact(fromCity, toCity, quantity, wasteType)
+ * Upgraded to match Hackathon-Optimized API Stack requirements.
+ * Simulated Google Maps Routes API + emissions.dev logic.
+ */
+export function calculateImpact(fromCity: string, toCity: string, quantity: number, wasteType: string) {
   const fCity = (fromCity || "").toLowerCase().trim();
   const tCity = (toCity || "").toLowerCase().trim();
   
-  // Default to 100km if cities not found
-  const from = CITIES[fCity] || { lat: 19.0, lon: 72.8 }; 
-  const to = CITIES[tCity] || { lat: Math.random() + 19.0, lon: Math.random() + 72.8 }; // Randomize slightly if unknown city
+  // Fallback to coordinates if city not found
+  const from = CITIES[fCity] || { lat: 19.07, lon: 72.87 }; // Default Mumbai
+  const to = CITIES[tCity] || { lat: 28.70, lon: 77.10 };   // Default Delhi
   
-  let distanceKm = haversine(from.lat, from.lon, to.lat, to.lon);
-  if (distanceKm < 10) distanceKm = 50; // Assume minimum local transit
+  // Routes API Simulation: Real distances are often 1.2x - 1.4x the haversine (displacement)
+  let displacementKm = haversine(from.lat, from.lon, to.lat, to.lon);
+  let distanceKm = Math.round(displacementKm * 1.25); 
+  
+  if (distanceKm < 15) distanceKm = 30; // Minimum industrial transit gate-to-gate
 
-  // Transport Cost: ₹50 per ton per km
-  const transportCostINR = Math.round(distanceKm * 50 * quantityTons);
+  // Transport Cost: Professional freight rates (~₹60/ton-km for industrial specialized)
+  const transportCostINR = Math.round(distanceKm * 60 * quantity);
   
   const wType = (wasteType || "").toLowerCase().trim();
   const baseFactor = CO2_FACTORS[wType] || 1.0;
   
-  // Transport emissions: ~0.1 kg CO2 per ton-km
-  const transportEmissions = (distanceKm * 0.1 * quantityTons) / 1000; // in tons
-  
-  const totalCo2Saved = Math.max(0, (quantityTons * baseFactor) - transportEmissions);
-  const co2KgSaved = Math.round(totalCo2Saved * 1000);
+  /**
+   * emissions.dev Freight API Logic:
+   * CO2 Saved = (Emissions if virgin material produced) - (Transport Emissions for recycling)
+   * Average Virgin Plastic Production: ~2500kg CO2 per ton
+   * Average Recycled Plastic: ~500kg CO2 per ton
+   */
+  const virginEmissionsKg = quantity * baseFactor * 1000;
+  const transportEmissionsKg = (distanceKm * 0.105 * quantity); // Road freight factor
+  const totalCo2SavedKg = Math.max(0, virginEmissionsKg - transportEmissionsKg);
 
   return {
-    distanceKm: Math.round(distanceKm),
+    distanceKm,
     transportCostINR,
-    co2KgSaved,
-    method: "Truck"
+    co2KgSaved: Math.round(totalCo2SavedKg),
+    method: "Industrial Freight Truck (BS-VI)",
+    routePrecision: "Simulated Routes API v1"
   };
 }
