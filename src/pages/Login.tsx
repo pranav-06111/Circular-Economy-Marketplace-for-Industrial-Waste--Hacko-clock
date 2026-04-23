@@ -1,20 +1,32 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { 
   Leaf, UserCircle, Settings, Mail, Lock, Briefcase, 
   MapPin, Phone, Building2, Package, Factory, 
-  CheckCircle2, ShieldCheck, Chrome, Loader2, Zap
+  CheckCircle2, ShieldCheck, Loader2, Zap
 } from 'lucide-react';
+
+declare global {
+  interface Window { google?: any; }
+}
+
+const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || '';
 
 export default function Login({ setAuth }: { setAuth: (val: boolean) => void }) {
   const navigate = useNavigate();
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const loginRoleRef = useRef<'seller' | 'buyer'>('seller');
+  const googleBtnRef = useRef<HTMLDivElement>(null);
   
   // Visual tab for login role
   const [loginRole, setLoginRole] = useState<'seller' | 'buyer'>('seller');
+
+  // Keep ref in sync so the Google callback always has the latest role
+  useEffect(() => { loginRoleRef.current = loginRole; }, [loginRole]);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -31,6 +43,58 @@ export default function Login({ setAuth }: { setAuth: (val: boolean) => void }) 
   useEffect(() => {
     setFormData(prev => ({ ...prev, role: loginRole }));
   }, [loginRole]);
+
+  // Google credential callback
+  const handleGoogleResponse = useCallback(async (response: any) => {
+    setGoogleLoading(true);
+    setError('');
+    try {
+      const res = await axios.post('/api/auth/google', {
+        credential: response.credential,
+        role: loginRoleRef.current,
+      });
+      localStorage.setItem('token', res.data.token);
+      localStorage.setItem('user', JSON.stringify(res.data.user));
+      setAuth(true);
+      navigate(res.data.user.role === 'buyer' ? '/buyer-dashboard' : '/dashboard');
+    } catch (err: any) {
+      setError(err.response?.data?.error || 'Google sign-in failed');
+    } finally {
+      setGoogleLoading(false);
+    }
+  }, [setAuth, navigate]);
+
+  // Initialize Google Identity Services
+  useEffect(() => {
+    if (!GOOGLE_CLIENT_ID) return;
+    const initGoogle = () => {
+      window.google?.accounts.id.initialize({
+        client_id: GOOGLE_CLIENT_ID,
+        callback: handleGoogleResponse,
+        ux_mode: 'popup',
+      });
+      // Render Google's official button into our container
+      if (googleBtnRef.current) {
+        googleBtnRef.current.innerHTML = '';
+        window.google.accounts.id.renderButton(googleBtnRef.current, {
+          type: 'standard',
+          theme: 'filled_blue',
+          size: 'large',
+          text: 'continue_with',
+          shape: 'pill',
+          width: googleBtnRef.current.offsetWidth || 400,
+        });
+      }
+    };
+    if (window.google?.accounts) {
+      initGoogle();
+    } else {
+      const interval = setInterval(() => {
+        if (window.google?.accounts) { initGoogle(); clearInterval(interval); }
+      }, 100);
+      return () => clearInterval(interval);
+    }
+  }, [handleGoogleResponse, isLogin]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -180,12 +244,14 @@ export default function Login({ setAuth }: { setAuth: (val: boolean) => void }) 
             {/* Social Logins */}
             {isLogin && (
               <div className="mb-6 space-y-3">
-                <button type="button" className="w-full flex items-center justify-center gap-3 py-2.5 px-4 rounded-xl bg-white text-slate-900 font-semibold text-sm hover:bg-slate-100 transition-colors shadow-sm">
-                  <Chrome size={18} className="text-blue-500" />
-                  Continue with Google
-                </button>
+                {googleLoading ? (
+                  <div className="w-full flex items-center justify-center gap-3 py-2.5 px-4 rounded-xl bg-white/10 text-white font-semibold text-sm">
+                    <Loader2 size={18} className="animate-spin" /> Signing in with Google...
+                  </div>
+                ) : (
+                  <div ref={googleBtnRef} className="w-full flex justify-center [&>div]:w-full [&_iframe]:!w-full" />
+                )}
 
-                
                 <div className="relative flex items-center py-4">
                   <div className="flex-grow border-t border-slate-800"></div>
                   <span className="flex-shrink-0 mx-4 text-slate-500 text-xs uppercase tracking-wider font-medium">Or continue with email</span>
