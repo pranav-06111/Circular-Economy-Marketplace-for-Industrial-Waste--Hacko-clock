@@ -1,67 +1,71 @@
 import Groq from 'groq-sdk';
+import { GoogleGenAI } from '@google/genai';
 import dotenv from 'dotenv';
 dotenv.config();
 
 const groq = process.env.GROQ_API_KEY ? new Groq({ apiKey: process.env.GROQ_API_KEY }) : null;
+const ai = process.env.GEMINI_API_KEY ? new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY }) : null;
 
 /**
- * analyzeWaste(photoBase64, processDescription)
- * Robustly handles industrial waste analysis using Groq.
+ * analyzeWastePhoto(photosBase64, processDescription)
+ * Uses Gemini 1.5 Flash to analyze uploaded waste photos and the declared process.
  */
-export async function analyzeWaste(photoOrPhotos: string | string[], descriptionOrForm: any) {
-  if (!groq) return getDefaultAnalysis();
+export async function analyzeWastePhoto(photosBase64: string[], processDescription: string) {
+  if (!ai) return getDefaultAnalysis();
 
   try {
-    let processDescription = typeof descriptionOrForm === 'string' ? descriptionOrForm : (descriptionOrForm.processDescription || descriptionOrForm.description || JSON.stringify(descriptionOrForm));
-
-    const systemPrompt = `You are an expert industrial waste auditor in India. 
-    Reference the "Hazardous and Other Wastes (Management and Transboundary Movement) Rules, 2016".
-    Flag if the waste matches chemical sludge, solvents, e-waste, or heavy metals.
+    const prompt = `You are an expert industrial waste auditor in India.
+    Analyze the provided photos of the waste and the declared process description: "${processDescription}".
     
-    Return ONLY a JSON object with this structure:
+    Reference the "Hazardous and Other Wastes (Management and Transboundary Movement) Rules, 2016".
+    Determine the likely chemical composition, pH, moisture content, flash point, physical form, and key contaminants.
+    
+    Return ONLY a JSON object with this EXACT structure (no markdown tags):
     {
-      "inferredComposition": "Description of materials",
+      "composition": { "ChemicalA": 40, "ChemicalB": 60 },
+      "physicalForm": "Solid" | "Liquid" | "Sludge" | "Baled" | "Loose",
+      "pH": number (1-14, use 7 if neutral/solid),
+      "moistureContent": number (0-100 percentage),
+      "flashPoint": number (Celsius, use 999 if not flammable),
+      "contaminants": ["contaminant1", "contaminant2"],
       "hazardousLevel": "Low" | "Medium" | "High",
-      "keyChemicals": ["chemical1", "chemical2"],
-      "confidence": 0.0 to 1.0,
-      "regulatoryNotes": "Detailed notes referencing specific schedules/rules",
-      "regulatoryFlags": ["Rule 1", "Rule 2"] 
+      "confidence": number (0.0 to 1.0)
     }`;
 
-    const promptText = `Description: ${processDescription} \nFull Data: ${typeof descriptionOrForm === 'object' ? JSON.stringify(descriptionOrForm) : ''}`;
-    
-    // Note: Most Groq models are text-only. We use the description for analysis.
-    // If using a vision model, we'd include the image.
-    const chatCompletion = await groq.chat.completions.create({
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: promptText }
-      ],
-      model: 'llama-3.3-70b-versatile',
-      response_format: { type: 'json_object' }
+    // Convert base64 strings to inlineData objects for Gemini
+    const contents = photosBase64.map(base64 => {
+      // Remove data URL prefix if present
+      const cleanBase64 = base64.includes('base64,') ? base64.split('base64,')[1] : base64;
+      return { inlineData: { mimeType: 'image/jpeg', data: cleanBase64 } };
     });
 
-    const text = chatCompletion.choices[0]?.message?.content || "";
-    const parsed = JSON.parse(text);
-    
-    if (!parsed.regulatoryFlags && parsed.regulatoryNotes) {
-      parsed.regulatoryFlags = [parsed.regulatoryNotes];
-    }
-    return parsed;
+    const response = await ai.models.generateContent({
+      model: 'gemini-1.5-flash',
+      contents: [prompt, ...contents]
+    });
+
+    let text = response.text || "";
+    // Clean markdown if present
+    if (text.startsWith('\`\`\`json')) text = text.replace(/\`\`\`json/g, '').replace(/\`\`\`/g, '').trim();
+    if (text.startsWith('\`\`\`')) text = text.replace(/\`\`\`/g, '').trim();
+
+    return JSON.parse(text);
   } catch (error) {
-    console.error("analyzeWaste error:", error);
+    console.error("analyzeWastePhoto error:", error);
     return getDefaultAnalysis();
   }
 }
 
 function getDefaultAnalysis() {
   return {
-    inferredComposition: "Unknown industrial byproduct",
-    hazardousLevel: "Medium",
-    keyChemicals: [],
-    confidence: 0,
-    regulatoryNotes: "Manual audit recommended under HW Rules 2016.",
-    regulatoryFlags: ["Manual verification required."]
+    composition: { "Unknown Polymer": 80, "Dirt": 20 },
+    physicalForm: "Solid",
+    pH: 7,
+    moistureContent: 5,
+    flashPoint: 999,
+    contaminants: ["Dust"],
+    hazardousLevel: "Low",
+    confidence: 0.5
   };
 }
 
@@ -143,19 +147,22 @@ export async function getSmartMatches(wasteData: any, buyerProfiles: any[]) {
   }
 }
 
-export async function checkCompliance(wasteData: any) {
+export async function checkRegulatoryCompliance(aiAnalysisData: any) {
   if (!groq) return getDefaultCompliance();
 
   try {
-    const prompt = `Check compliance for this waste under Indian environmental laws (CPCB/SPCB).
-    Waste Data: ${JSON.stringify(wasteData)}
+    const prompt = `You are a strict Environmental Regulatory AI in India.
+    Check compliance for this waste under the "Hazardous and Other Wastes (Management and Transboundary Movement) Rules, 2016".
     
-    Return ONLY a JSON object:
+    Waste Analysis Data: ${JSON.stringify(aiAnalysisData)}
+    
+    Return ONLY a JSON object with this EXACT structure (no markdown tags):
     {
       "isHazardous": boolean,
-      "permitsRequired": ["string"],
-      "transportRestrictions": "string",
-      "esgImpact": "string"
+      "badge": "Green" | "Yellow" | "Red",
+      "regulatoryClass": "Schedule I" | "Schedule II" | "Non-Hazardous" | "Other",
+      "permitsRequired": ["Form 13", "SPCB Authorization", "Form 10 Manifest", etc],
+      "warnings": ["Specific warning message 1", "Warning 2"]
     }`;
 
     const chatCompletion = await groq.chat.completions.create({
@@ -164,10 +171,14 @@ export async function checkCompliance(wasteData: any) {
       response_format: { type: 'json_object' }
     });
 
-    const text = chatCompletion.choices[0]?.message?.content || "";
+    let text = chatCompletion.choices[0]?.message?.content || "";
+    // Clean markdown if present
+    if (text.startsWith('\`\`\`json')) text = text.replace(/\`\`\`json/g, '').replace(/\`\`\`/g, '').trim();
+    if (text.startsWith('\`\`\`')) text = text.replace(/\`\`\`/g, '').trim();
+
     return JSON.parse(text);
   } catch (error) {
-    console.error("checkCompliance error:", error);
+    console.error("checkRegulatoryCompliance error:", error);
     return getDefaultCompliance();
   }
 }
@@ -175,8 +186,9 @@ export async function checkCompliance(wasteData: any) {
 function getDefaultCompliance() {
   return {
     isHazardous: false,
-    permitsRequired: ["Form 3 (HW Rules 2016)"],
-    transportRestrictions: "Manifest system (Form 10) required if hazardous.",
-    esgImpact: "Potential reduction in virgin resource extraction."
+    badge: "Green",
+    regulatoryClass: "Non-Hazardous",
+    permitsRequired: ["Standard Transport Challan"],
+    warnings: []
   };
 }

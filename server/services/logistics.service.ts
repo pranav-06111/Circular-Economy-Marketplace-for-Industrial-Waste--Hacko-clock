@@ -66,8 +66,8 @@ export function calculateImpact(fromCity: string, toCity: string, quantity: numb
   
   if (distanceKm < 15) distanceKm = 30; // Minimum industrial transit gate-to-gate
 
-  // Transport Cost: Professional freight rates (~₹60/ton-km for industrial specialized)
-  const transportCostINR = Math.round(distanceKm * 60 * quantity);
+  // Transport Cost: Flat rate ₹15/km
+  const transportCostINR = Math.round(distanceKm * 15);
   
   const wType = (wasteType || "").toLowerCase().trim();
   const baseFactor = CO2_FACTORS[wType] || 1.0;

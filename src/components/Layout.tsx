@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, LogOut, PackagePlus, Leaf, Search, Zap, Activity, UserCircle } from 'lucide-react';
+import { LayoutDashboard, LogOut, PackagePlus, Leaf, Search, Zap, Activity, UserCircle, ClipboardList } from 'lucide-react';
 import OnboardingModal from './OnboardingModal';
 
 export default function Layout({ setAuth }: { setAuth: (val: boolean) => void }) {
@@ -41,6 +41,7 @@ export default function Layout({ setAuth }: { setAuth: (val: boolean) => void })
     { name: 'My Listings', path: '/dashboard', icon: LayoutDashboard },
     { name: 'AI Matcher', path: '/ai-matcher', icon: Zap },
     { name: 'List Waste', path: '/offload', icon: PackagePlus },
+    { name: 'My Orders', path: '/seller/orders', icon: ClipboardList },
     { name: 'Profile', path: '/profile', icon: UserCircle },
   ];
 
@@ -48,6 +49,7 @@ export default function Layout({ setAuth }: { setAuth: (val: boolean) => void })
     { name: 'Browse Waste', path: '/buyer-dashboard', icon: Search },
     { name: 'AI Matcher', path: '/ai-matcher', icon: Zap },
     { name: 'My Matches', path: '/matches', icon: Activity },
+    { name: 'My Orders', path: '/buyer/orders', icon: ClipboardList },
     { name: 'Profile', path: '/profile', icon: UserCircle },
   ];
   

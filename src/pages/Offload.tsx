@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { UploadCloud, CheckCircle2, Factory, Trash2, Plus, X } from 'lucide-react';
+import { UploadCloud, CheckCircle2, Factory, Trash2, Plus, X, Zap, AlertTriangle, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function Offload() {
@@ -39,7 +39,10 @@ export default function Offload() {
   const [files, setFiles] = useState<File[]>([]);
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
+  const [aiLoading, setAiLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [complianceInfo, setComplianceInfo] = useState<any>(null);
+  const [aiAnalysisResult, setAiAnalysisResult] = useState<any>(null);
 
   const nonHazardousCategories = ['Municipal Solid Waste (MSW)', 'Industrial Non-Hazardous', 'Plastic Waste', 'Paper / Cardboard', 'Glass', 'Metal Scrap', 'E-waste', 'Composite / Other'];
   const hazardousCategories = ['Hazardous Chemical Waste', 'Solvents & Degreasers', 'Oily Wastes', 'Industrial Sludges', 'Batteries', 'Medical / Clinical Waste', 'Radioactive Waste'];
@@ -88,6 +91,50 @@ export default function Offload() {
     setComposition({});
     setFiles([]);
     setPreviewUrls([]);
+    setComplianceInfo(null);
+    setAiAnalysisResult(null);
+  };
+
+  const handleAnalyzeAI = async () => {
+    if (files.length === 0) {
+      toast.error("Please upload at least one photo for AI analysis.");
+      return;
+    }
+    
+    setAiLoading(true);
+    const data = new FormData();
+    data.append('processDescription', formData.processDescription || formData.description);
+    files.forEach(f => data.append('photos', f));
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post('/api/listings/analyze-photo', data, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      const { aiAnalysis, complianceInfo: compInfo } = response.data;
+      
+      // Auto-fill form
+      setFormData(prev => ({
+        ...prev,
+        physicalForm: aiAnalysis.physicalForm || prev.physicalForm,
+        pH: aiAnalysis.pH ? String(aiAnalysis.pH) : prev.pH,
+        moistureContent: aiAnalysis.moistureContent ? String(aiAnalysis.moistureContent) : prev.moistureContent,
+        flashPoint: aiAnalysis.flashPoint && aiAnalysis.flashPoint !== 999 ? String(aiAnalysis.flashPoint) : prev.flashPoint,
+      }));
+      
+      if (aiAnalysis.contaminants) setContaminants(aiAnalysis.contaminants);
+      if (aiAnalysis.composition) setComposition(aiAnalysis.composition);
+      
+      setComplianceInfo(compInfo);
+      setAiAnalysisResult(aiAnalysis);
+      toast.success("AI Analysis Complete! Form auto-filled.");
+    } catch (error) {
+      console.error(error);
+      toast.error("AI Analysis failed. Please try again.");
+    } finally {
+      setAiLoading(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -109,6 +156,9 @@ export default function Offload() {
     files.forEach(file => {
       data.append('photos', file);
     });
+
+    if (aiAnalysisResult) data.append('aiAnalysis', JSON.stringify(aiAnalysisResult));
+    if (complianceInfo) data.append('complianceInfo', JSON.stringify(complianceInfo));
 
     try {
       const token = localStorage.getItem('token');
@@ -330,7 +380,74 @@ export default function Offload() {
                 </div>
               )}
             </div>
+            
+            <button 
+              type="button" 
+              onClick={handleAnalyzeAI}
+              disabled={aiLoading || files.length === 0}
+              className="mt-4 w-full bg-slate-900 dark:bg-slate-800 hover:bg-slate-800 dark:hover:bg-slate-700 text-white py-3 rounded-xl font-bold flex items-center justify-center transition-colors disabled:opacity-50 border border-slate-700"
+            >
+              {aiLoading ? (
+                <span className="flex items-center gap-2">
+                  <Loader2 size={18} className="animate-spin text-emerald-400" />
+                  Analyzing waste via Gemini 1.5 Flash...
+                </span>
+              ) : (
+                <span className="flex items-center gap-2">
+                  <Zap size={18} className="text-emerald-400" />
+                  Analyze Waste with AI
+                </span>
+              )}
+            </button>
           </div>
+
+          {/* Compliance UI */}
+          {complianceInfo && (
+            <div className={`p-5 rounded-2xl border ${
+              complianceInfo.badge === 'Red' ? 'bg-rose-50 border-rose-200 dark:bg-rose-500/10 dark:border-rose-500/30' :
+              complianceInfo.badge === 'Yellow' ? 'bg-amber-50 border-amber-200 dark:bg-amber-500/10 dark:border-amber-500/30' :
+              'bg-emerald-50 border-emerald-200 dark:bg-emerald-500/10 dark:border-emerald-500/30'
+            }`}>
+              <div className="flex items-start gap-4">
+                <div className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 ${
+                  complianceInfo.badge === 'Red' ? 'bg-rose-100 text-rose-600 dark:bg-rose-500/20' :
+                  complianceInfo.badge === 'Yellow' ? 'bg-amber-100 text-amber-600 dark:bg-amber-500/20' :
+                  'bg-emerald-100 text-emerald-600 dark:bg-emerald-500/20'
+                }`}>
+                  {complianceInfo.badge === 'Red' ? <AlertTriangle size={24} /> : <CheckCircle2 size={24} />}
+                </div>
+                <div>
+                  <h3 className={`text-lg font-bold ${
+                    complianceInfo.badge === 'Red' ? 'text-rose-900 dark:text-rose-400' :
+                    complianceInfo.badge === 'Yellow' ? 'text-amber-900 dark:text-amber-400' :
+                    'text-emerald-900 dark:text-emerald-400'
+                  }`}>
+                    Regulatory Compliance: {complianceInfo.regulatoryClass}
+                  </h3>
+                  
+                  {complianceInfo.warnings && complianceInfo.warnings.length > 0 && (
+                    <ul className="mt-2 space-y-1">
+                      {complianceInfo.warnings.map((w: string, i: number) => (
+                        <li key={i} className={`text-sm flex items-start gap-2 ${complianceInfo.badge === 'Red' ? 'text-rose-700 dark:text-rose-300' : 'text-slate-700 dark:text-slate-300'}`}>
+                          <span className="mt-1 flex-shrink-0">•</span> {w}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  
+                  {complianceInfo.permitsRequired && complianceInfo.permitsRequired.length > 0 && (
+                     <div className="mt-3 flex flex-wrap gap-2">
+                       {complianceInfo.permitsRequired.map((p: string, i: number) => (
+                         <span key={i} className="px-2.5 py-1 bg-white/60 dark:bg-black/20 border border-current/20 rounded text-xs font-semibold uppercase tracking-wider">
+                           Req: {p}
+                         </span>
+                       ))}
+                     </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
 
         </div>
         

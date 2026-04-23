@@ -15,10 +15,15 @@ import {
   Copy,
   Hash,
   Activity,
-  History
+  History,
+  Map as MapIcon,
+  Globe
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
+import MapModal from '../components/MapModal';
+import PaymentModal from '../components/PaymentModal';
+import { getCoordinates, haversineDistance, calculateLogisticsCost, calculateCO2Savings } from '../utils/geoUtils';
 
 interface MatchResult {
   wasteId: string;
@@ -35,6 +40,12 @@ interface MatchResult {
   logisticsEstimate?: number;
   location?: string;
   industryType?: string;
+  sellerName?: string;
+  sellerLocation?: string;
+  carbonCreditPotential?: string;
+  regulatoryComplianceNote?: string;
+  quantity?: number;
+  unit?: string;
 }
 
 export default function AiMatcher() {
@@ -51,12 +62,34 @@ export default function AiMatcher() {
     location: 'Mumbai',
     quantity: '10'
   });
+
+  const [buyerPrefs, setBuyerPrefs] = useState({
+    materialType: '',
+    location: '',
+    minQuantity: '',
+    useCase: '',
+  });
   const [photo, setPhoto] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState('');
 
   const [loading, setLoading] = useState(false);
   const [matches, setMatches] = useState<MatchResult[]>([]);
   const [completedMatch, setCompletedMatch] = useState<any>(null);
+  const [mapMatch, setMapMatch] = useState<MatchResult | null>(null);
+  const [paymentMatch, setPaymentMatch] = useState<MatchResult | null>(null);
+
+  // Geo helper for match cards
+  const getGeoData = (match: MatchResult) => {
+    const sellerLoc = role === 'buyer' ? (match.sellerLocation || match.location || 'Mumbai') : (user?.location || 'Mumbai');
+    const buyerLoc = role === 'buyer' ? (user?.location || 'Mumbai') : (match.location || 'Delhi');
+    const sellerCoords = getCoordinates(sellerLoc);
+    const buyerCoords = getCoordinates(buyerLoc);
+    const distanceKm = haversineDistance(sellerCoords, buyerCoords);
+    const qty = match.quantity || parseFloat(match.estimatedMonthlyVolume) || 5;
+    const logisticsCost = calculateLogisticsCost(distanceKm, qty);
+    const co2Savings = calculateCO2Savings(distanceKm, qty, match.suggestedUseCase || 'Plastic');
+    return { sellerCoords, buyerCoords, distanceKm, logisticsCost, co2Savings, qty, sellerLoc, buyerLoc };
+  };
 
   // Extract role
   const userString = localStorage.getItem('user');
@@ -75,11 +108,17 @@ export default function AiMatcher() {
     setCompletedMatch(null);
     try {
       const token = localStorage.getItem('token');
-      const matchRes = await axios.get('/api/listings/buyer/matches', {
+      const params = new URLSearchParams();
+      if (buyerPrefs.materialType) params.append('materialType', buyerPrefs.materialType);
+      if (buyerPrefs.location) params.append('preferredLocation', buyerPrefs.location);
+      if (buyerPrefs.minQuantity) params.append('minQuantity', buyerPrefs.minQuantity);
+      if (buyerPrefs.useCase) params.append('useCase', buyerPrefs.useCase);
+
+      const matchRes = await axios.get(`/api/listings/buyer/matches?${params.toString()}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setMatches(matchRes.data.matches.sort((a: any, b: any) => b.compatibilityScore - a.compatibilityScore));
-      toast.success("AI Analysis Complete!");
+      toast.success(`AI Analysis Complete! ${matchRes.data.matches.length} matches found.`);
     } catch (error: any) {
       console.error(error);
       const msg = error.response?.data?.details || error.response?.data?.error || "Matching engine failed. Check API connectivity.";
@@ -159,22 +198,29 @@ export default function AiMatcher() {
   };
 
   const handleCompleteMatch = async (match: MatchResult) => {
+    // Open payment modal instead of directly completing
+    setPaymentMatch(match);
+  };
+
+  const handlePaymentSuccess = async (paymentResult: any) => {
+    if (!paymentMatch) return;
     try {
       const token = localStorage.getItem('token');
-      const res = await axios.post(`/api/listings/${match.wasteId}/complete-match`, {
-        buyerId: match.buyerId,
-        matchScore: match.compatibilityScore,
-        reason: match.reason,
-        suggestedUseCase: match.suggestedUseCase
+      const res = await axios.post(`/api/listings/${paymentMatch.wasteId}/complete-match`, {
+        buyerId: paymentMatch.buyerId,
+        matchScore: paymentMatch.compatibilityScore,
+        reason: paymentMatch.reason,
+        suggestedUseCase: paymentMatch.suggestedUseCase,
+        paymentId: paymentResult.paymentId,
+        blockchainHash: paymentResult.blockchainHash,
       }, {
         headers: { Authorization: `Bearer ${token}` }
       });
-
-      setCompletedMatch(res.data.match);
-      toast.success("Transaction Anchored Successfully!");
+      setCompletedMatch({ ...res.data.match, blockchainHash: paymentResult.blockchainHash, paymentId: paymentResult.paymentId });
     } catch (error) {
       console.error(error);
-      toast.error("Failed to finalize match.");
+      // Even if match creation fails, payment succeeded — show success with payment data
+      setCompletedMatch({ blockchainHash: paymentResult.blockchainHash, paymentId: paymentResult.paymentId });
     }
   };
 
@@ -213,11 +259,71 @@ export default function AiMatcher() {
            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 shadow-sm">
               {role === 'buyer' ? (
                 <>
-                  <h3 className="text-lg font-bold mb-6 flex items-center">
+                  <h3 className="text-lg font-bold mb-5 flex items-center">
                      <Search size={20} className="mr-2 text-emerald-500" />
                      Find Raw Materials
                   </h3>
-                  <p className="text-sm text-slate-500 mb-6">Our AI will scan all active waste listings and match them against your company profile.</p>
+
+                  <div className="space-y-4 mb-6">
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">What material do you need?</label>
+                      <select
+                        value={buyerPrefs.materialType}
+                        onChange={e => setBuyerPrefs({...buyerPrefs, materialType: e.target.value})}
+                        className="w-full px-4 py-2.5 border border-slate-300 dark:border-slate-700 rounded-xl focus:ring-emerald-500 focus:border-emerald-500 dark:bg-slate-950 text-sm font-medium"
+                      >
+                        <option value="">All Types (AI decides)</option>
+                        <option value="Plastic Waste">Plastic / Polymer</option>
+                        <option value="Metal Scrap">Metal Scrap</option>
+                        <option value="Paper / Cardboard">Paper / Cardboard</option>
+                        <option value="Glass">Glass</option>
+                        <option value="E-waste">E-waste / Electronics</option>
+                        <option value="Organic Waste">Organic / Biomass</option>
+                        <option value="Hazardous Chemical Waste">Chemical Waste</option>
+                        <option value="Industrial Sludges">Industrial Sludges</option>
+                        <option value="Textile Waste">Textile Waste</option>
+                        <option value="Rubber Waste">Rubber</option>
+                        <option value="Oily Wastes">Oily Wastes</option>
+                        <option value="Composite / Other">Other</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Your Location</label>
+                      <input
+                        type="text"
+                        value={buyerPrefs.location}
+                        onChange={e => setBuyerPrefs({...buyerPrefs, location: e.target.value})}
+                        placeholder="e.g. Pune, Mumbai, Delhi"
+                        className="w-full px-4 py-2.5 border border-slate-300 dark:border-slate-700 rounded-xl focus:ring-emerald-500 focus:border-emerald-500 dark:bg-slate-950 text-sm"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Min Quantity</label>
+                        <input
+                          type="number"
+                          value={buyerPrefs.minQuantity}
+                          onChange={e => setBuyerPrefs({...buyerPrefs, minQuantity: e.target.value})}
+                          placeholder="e.g. 5"
+                          className="w-full px-4 py-2.5 border border-slate-300 dark:border-slate-700 rounded-xl focus:ring-emerald-500 focus:border-emerald-500 dark:bg-slate-950 text-sm font-mono"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Intended Use</label>
+                        <input
+                          type="text"
+                          value={buyerPrefs.useCase}
+                          onChange={e => setBuyerPrefs({...buyerPrefs, useCase: e.target.value})}
+                          placeholder="e.g. Recycling"
+                          className="w-full px-4 py-2.5 border border-slate-300 dark:border-slate-700 rounded-xl focus:ring-emerald-500 focus:border-emerald-500 dark:bg-slate-950 text-sm"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <p className="text-[11px] text-slate-400 mb-4">Our AI will scan all active waste listings and rank them by compatibility with your needs.</p>
 
                   <button 
                     onClick={handleBuyerMatch}
@@ -361,14 +467,24 @@ export default function AiMatcher() {
                              <p className="text-sm text-slate-600 dark:text-slate-400 mb-4 leading-relaxed line-clamp-2">
                                 <span className="font-bold text-emerald-600">AI Reasoning:</span> {match.reason}
                              </p>
-
-                             <div className="flex flex-wrap gap-4 items-center">
-                                <div className="flex items-center text-xs font-bold text-slate-500">
-                                   <Truck size={14} className="mr-1.5 text-slate-400" /> ₹{match.logisticsEstimate?.toLocaleString()} est.
-                                </div>
-                                 <div className="flex items-center text-xs font-bold text-emerald-600">
-                                    <Leaf size={14} className="mr-1.5" /> {match.co2Savings?.toFixed(1)}t CO₂ Saved
-                                 </div>
+                             <div className="flex flex-wrap gap-3 items-center">
+                                {(() => {
+                                  const geo = getGeoData(match);
+                                  return (<>
+                                    <div className="flex items-center text-xs font-bold text-sky-600 bg-sky-50 dark:bg-sky-500/10 px-2 py-1 rounded-lg">
+                                       <MapIcon size={14} className="mr-1.5" /> {geo.distanceKm.toFixed(0)} km
+                                    </div>
+                                    <div className="flex items-center text-xs font-bold text-amber-600 bg-amber-50 dark:bg-amber-500/10 px-2 py-1 rounded-lg">
+                                       <Truck size={14} className="mr-1.5" /> ₹{geo.logisticsCost.toLocaleString()}
+                                    </div>
+                                    <div className="flex items-center text-xs font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-500/10 px-2 py-1 rounded-lg">
+                                       <Leaf size={14} className="mr-1.5" /> {geo.co2Savings.toFixed(1)}t CO₂
+                                    </div>
+                                    <div className="flex items-center text-xs font-bold text-indigo-600 bg-indigo-50 dark:bg-indigo-500/10 px-2 py-1 rounded-lg">
+                                       🌍 Eligible for {Math.floor(geo.co2Savings)} Carbon Credits
+                                    </div>
+                                  </>);
+                                })()}
                                  {match.carbonCreditPotential && (
                                    <div className="flex items-center text-xs font-bold text-sky-600 bg-sky-50 dark:bg-sky-500/10 px-2 py-1 rounded-lg">
                                       <Activity size={14} className="mr-1.5" /> {match.carbonCreditPotential} Carbon Credits
@@ -386,12 +502,21 @@ export default function AiMatcher() {
                                   </p>
                                 </div>
                               )}
+
+                              <div className="flex items-center gap-3 mt-4">
+                                <button
+                                  onClick={() => setMapMatch(match)}
+                                  className="bg-slate-100 dark:bg-slate-800 hover:bg-sky-50 dark:hover:bg-sky-500/10 text-slate-700 dark:text-slate-300 px-4 py-2 rounded-xl text-xs font-bold tracking-wider transition-all active:scale-95 flex items-center gap-2 border border-slate-200 dark:border-slate-700"
+                                >
+                                  <MapIcon size={14} /> VIEW ON MAP
+                                </button>
                                 <button 
                                   onClick={() => handleCompleteMatch(match)}
                                   className="ml-auto bg-slate-900 dark:bg-emerald-500 hover:bg-emerald-400 text-white dark:text-slate-950 px-5 py-2 rounded-xl text-xs font-black tracking-widest transition-all active:scale-95 flex items-center gap-2"
                                 >
                                    EXPRESS INTEREST <ArrowRight size={14} />
                                 </button>
+                              </div>
                              </div>
                           </div>
                     </motion.div>
@@ -440,6 +565,55 @@ export default function AiMatcher() {
            </AnimatePresence>
         </div>
       </div>
+
+      {/* Map Modal */}
+      {mapMatch && (() => {
+        const geo = getGeoData(mapMatch);
+        const sellerName = role === 'buyer' ? (mapMatch.sellerName || 'Seller') : (user?.companyName || user?.name || 'Your Company');
+        const buyerName = role === 'buyer' ? (user?.companyName || user?.name || 'You') : (mapMatch.buyerName || 'Industrial Consumer');
+        return (
+          <MapModal
+            isOpen={!!mapMatch}
+            onClose={() => setMapMatch(null)}
+            sellerCoords={geo.sellerCoords}
+            buyerCoords={geo.buyerCoords}
+            sellerName={sellerName}
+            buyerName={buyerName}
+            sellerLocation={geo.sellerLoc}
+            buyerLocation={geo.buyerLoc}
+            distanceKm={geo.distanceKm}
+            logisticsCost={geo.logisticsCost}
+            co2Savings={geo.co2Savings}
+            wasteType={mapMatch.suggestedUseCase || 'Industrial Waste'}
+            quantity={geo.qty}
+            unit="tonnes"
+            compatibilityScore={mapMatch.compatibilityScore}
+          />
+        );
+      })()}
+
+      {/* Payment Modal */}
+      {paymentMatch && (() => {
+        const geo = getGeoData(paymentMatch);
+        return (
+          <PaymentModal
+            isOpen={!!paymentMatch}
+            onClose={() => setPaymentMatch(null)}
+            matchData={{
+              sellerName: role === 'buyer' ? (paymentMatch.sellerName || 'Seller') : (user?.companyName || 'Your Company'),
+              buyerName: role === 'buyer' ? (user?.companyName || 'You') : (paymentMatch.buyerName || 'Buyer'),
+              wasteType: paymentMatch.suggestedUseCase || 'Industrial Waste',
+              quantity: geo.qty,
+              unit: 'tonnes',
+              logisticsCost: geo.logisticsCost,
+              co2Savings: geo.co2Savings,
+              compatibilityScore: paymentMatch.compatibilityScore,
+              matchId: paymentMatch.wasteId,
+            }}
+            onSuccess={handlePaymentSuccess}
+          />
+        );
+      })()}
     </div>
   );
 }

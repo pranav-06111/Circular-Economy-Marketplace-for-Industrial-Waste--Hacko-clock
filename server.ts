@@ -9,6 +9,8 @@ import path from 'path';
 
 import { authRoutes } from './server/routes/auth.js';
 import { listingRoutes } from './server/routes/listings.js';
+import { paymentRoutes } from './server/routes/payment.js';
+import { orderRoutes } from './server/routes/orders.js';
 import { seedDatabase } from './server/seed.js';
 
 async function startServer() {
@@ -47,6 +49,8 @@ async function startServer() {
 
   app.use('/api/auth', authRoutes);
   app.use('/api/listings', listingRoutes);
+  app.use('/api/payment', paymentRoutes);
+  app.use('/api/orders', orderRoutes);
 
   // Vite middleware for development
   if (process.env.NODE_ENV !== 'production') {

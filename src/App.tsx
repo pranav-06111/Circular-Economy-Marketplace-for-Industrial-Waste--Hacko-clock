@@ -16,6 +16,8 @@ import BuyerMatches from './pages/BuyerMatches';
 import AiMatcher from './pages/AiMatcher';
 import Offload from './pages/Offload';
 import Profile from './pages/Profile';
+import SellerOrders from './pages/SellerOrders';
+import BuyerOrders from './pages/BuyerOrders';
 import Layout from './components/Layout';
 
 export default function App() {
@@ -63,6 +65,8 @@ export default function App() {
           <Route path="ai-matcher" element={<AiMatcher />} />
           <Route path="offload" element={<Offload />} />
           <Route path="profile" element={<Profile />} />
+          <Route path="seller/orders" element={<SellerOrders />} />
+          <Route path="buyer/orders" element={<BuyerOrders />} />
         </Route>
       </Routes>
     </Router>

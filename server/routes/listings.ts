@@ -5,12 +5,39 @@ import { ESGRecord } from '../models/ESGRecord.js';
 import { Match } from '../models/Match.js';
 import { User } from '../models/User.js';
 import { authenticate, authorizeRole, AuthRequest } from '../middleware/auth.js';
-import { analyzeWaste, getSmartMatches, checkCompliance } from '../services/ai.service.js';
+import { analyzeWastePhoto, getSmartMatches, checkRegulatoryCompliance } from '../services/ai.service.js';
 import { calculateImpact } from '../services/logistics.service.js';
 import CryptoJS from 'crypto-js';
 
 const router = express.Router();
-const upload = multer({ storage: multer.memoryStorage() });
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
+
+// --- New AI Photo Analysis Endpoint ---
+router.post('/analyze-photo', authenticate, authorizeRole(['seller']), upload.array('photos', 5), async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { processDescription } = req.body;
+    const files = req.files as Express.Multer.File[];
+
+    if (!files || files.length === 0) {
+      res.status(400).json({ success: false, message: 'Please upload at least one photo.' });
+      return;
+    }
+
+    // Convert to base64
+    const photoBase64s = files.map(file => `data:${file.mimetype};base64,${file.buffer.toString('base64')}`);
+
+    // Call Gemini for Photo Analysis
+    const aiAnalysis = await analyzeWastePhoto(photoBase64s, processDescription || "Unknown industrial process.");
+    
+    // Check Compliance against rules
+    const complianceInfo = await checkRegulatoryCompliance(aiAnalysis);
+
+    res.status(200).json({ success: true, aiAnalysis, complianceInfo });
+  } catch (error: any) {
+    console.error('Error analyzing photo:', error);
+    res.status(500).json({ success: false, message: 'Failed to analyze photo.' });
+  }
+});
 
 router.post('/', authenticate, authorizeRole(['seller']), upload.array('photos', 5), async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -40,16 +67,16 @@ router.post('/', authenticate, authorizeRole(['seller']), upload.array('photos',
        }
     }
 
-    // AI Analysis
-    const formData = {
-      wasteType, description, quantity, unit, frequency, location, 
-      processDescription, sourceIndustry, physicalForm, contaminants, moistureContent, pH, flashPoint, composition
-    };
+    // AI Analysis (fallback if they didn't use the pre-analysis button)
+    let aiAnalysis = req.body.aiAnalysis ? JSON.parse(req.body.aiAnalysis) : null;
+    let complianceInfo = req.body.complianceInfo ? JSON.parse(req.body.complianceInfo) : null;
+
+    if (!aiAnalysis) {
+      aiAnalysis = await analyzeWastePhoto(photoBase64s, processDescription || description);
+      complianceInfo = await checkRegulatoryCompliance(aiAnalysis);
+    }
     
-    const aiAnalysis = await analyzeWaste(photoBase64s, formData);
-    const complianceInfo = await checkCompliance({ ...formData, aiAnalysis });
-    
-    const compositionReport = `AI Composition: ${JSON.stringify(aiAnalysis.inferredComposition)}. Hazardous Level: ${aiAnalysis.hazardousLevel}. Notes: ${aiAnalysis.regulatoryFlags.join(', ')} | Compliance: ${complianceInfo.isHazardous ? 'Hazardous' : 'Non-Hazardous'}. Permits: ${complianceInfo.permitsRequired.join(', ')}`;
+    const compositionReport = `AI Composition: ${JSON.stringify(aiAnalysis.composition || aiAnalysis.inferredComposition)}. Hazardous Level: ${aiAnalysis.hazardousLevel}. | Compliance: ${complianceInfo.badge}. Permits: ${complianceInfo.permitsRequired.join(', ')}`;
 
     // Logistics & CO2
     const qtyTons = unit === 'kg' ? Number(quantity) / 1000 : Number(quantity);
@@ -79,7 +106,7 @@ router.post('/', authenticate, authorizeRole(['seller']), upload.array('photos',
       // Regulatory mappings
       isHazardous: complianceInfo.isHazardous,
       requiredPermits: complianceInfo.permitsRequired,
-      complianceNotes: complianceInfo.transportRestrictions,
+      complianceNotes: complianceInfo.warnings ? complianceInfo.warnings.join(' | ') : '',
       aiAnalysis,
 
       // App legacy
