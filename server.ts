@@ -1,15 +1,15 @@
+import dotenv from 'dotenv';
+dotenv.config();
+
 import express from 'express';
 import { createServer as createViteServer } from 'vite';
 import mongoose from 'mongoose';
 import cors from 'cors';
-import dotenv from 'dotenv';
 import path from 'path';
 
 import { authRoutes } from './server/routes/auth.js';
 import { listingRoutes } from './server/routes/listings.js';
 import { seedDatabase } from './server/seed.js';
-
-dotenv.config();
 
 async function startServer() {
   const app = express();

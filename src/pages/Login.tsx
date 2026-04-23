@@ -181,7 +181,7 @@ export default function Login({ setAuth }: { setAuth: (val: boolean) => void }) 
               </div>
               <div>
                 <h3 className="text-white font-bold text-lg">Compliance Ready</h3>
-                <p className="text-slate-400 text-sm">Automated documentation and tracking.</p>
+                <p className="text-slate-400 text-sm">Automated tracking under Hazardous Waste Rules 2016.</p>
               </div>
             </div>
           </div>

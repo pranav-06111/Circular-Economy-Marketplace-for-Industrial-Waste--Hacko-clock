@@ -2,10 +2,26 @@ import express, { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { User } from '../models/User.js';
+import { authenticate, AuthRequest } from '../middleware/auth.js';
 
 const router = express.Router();
-const JWT_SECRET = process.env.JWT_SECRET || 'supersecretjwtkey';
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || '';
+
+// Helper to build user response object
+function buildUserResponse(user: any) {
+  return {
+    id: user._id,
+    name: user.name,
+    companyName: user.companyName,
+    email: user.email,
+    industryType: user.industryType,
+    role: user.role,
+    avatar: user.avatar,
+    location: user.location,
+    phone: user.phone,
+    profileCompleted: user.profileCompleted || false,
+  };
+}
 
 router.post('/register', async (req: Request, res: Response): Promise<void> => {
   try {
@@ -33,9 +49,9 @@ router.post('/register', async (req: Request, res: Response): Promise<void> => {
 
     await user.save();
     
-    // For MVP, auto-login after register
-    const token = jwt.sign({ userId: user._id, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
-    res.status(201).json({ token, user: { id: user._id, name: user.name, companyName: user.companyName, email: user.email, industryType: user.industryType, role: user.role } });
+    const secret = process.env.JWT_SECRET || 'supersecretjwtkey';
+    const token = jwt.sign({ userId: user._id, role: user.role }, secret, { expiresIn: '7d' });
+    res.status(201).json({ token, user: buildUserResponse(user) });
   } catch (error) {
     console.error('Register error:', error);
     res.status(500).json({ error: 'Server error during registration' });
@@ -70,8 +86,9 @@ router.post('/login', async (req: Request, res: Response): Promise<void> => {
       await user.save();
     }
 
-    const token = jwt.sign({ userId: user._id, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
-    res.status(200).json({ token, user: { id: user._id, name: user.name, companyName: user.companyName, email: user.email, industryType: user.industryType, role: user.role } });
+    const secret = process.env.JWT_SECRET || 'supersecretjwtkey';
+    const token = jwt.sign({ userId: user._id, role: user.role }, secret, { expiresIn: '7d' });
+    res.status(200).json({ token, user: buildUserResponse(user) });
   } catch (error) {
     console.error('Login error:', error);
     res.status(500).json({ error: 'Server error during login' });
@@ -149,22 +166,16 @@ router.post('/google', async (req: Request, res: Response): Promise<void> => {
         location: '',
         phone: '',
         industryType: 'Manufacturing',
+        profileCompleted: false,
       });
       await user.save();
     }
 
-    const token = jwt.sign({ userId: user._id, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
+    const secret = process.env.JWT_SECRET || 'supersecretjwtkey';
+    const token = jwt.sign({ userId: user._id, role: user.role }, secret, { expiresIn: '7d' });
     res.status(200).json({
       token,
-      user: {
-        id: user._id,
-        name: user.name,
-        companyName: user.companyName,
-        email: user.email,
-        industryType: user.industryType,
-        role: user.role,
-        avatar: user.avatar,
-      }
+      user: buildUserResponse(user),
     });
   } catch (error) {
     console.error('Google auth error:', error);
@@ -172,8 +183,54 @@ router.post('/google', async (req: Request, res: Response): Promise<void> => {
   }
 });
 
-router.get('/me', async (req: Request, res: Response): Promise<void> => {
-  res.status(200).json({ message: 'Not implemented' });
+// GET current user profile
+router.get('/me', authenticate, async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const user = await User.findById(req.user!.userId).select('-password');
+    if (!user) {
+      res.status(404).json({ error: 'User not found' });
+      return;
+    }
+    res.status(200).json({ user });
+  } catch (error) {
+    console.error('Get profile error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// PUT update user profile
+router.put('/profile', authenticate, async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const userId = req.user!.userId;
+    const allowedFields = [
+      'name', 'companyName', 'location', 'phone', 'industryType',
+      'bio', 'companySize', 'gstNumber', 'address', 'website',
+      'acceptedWasteTypes', 'wasteTypesGenerated', 'preferredSupplyRadius',
+      'profileCompleted', 'avatar'
+    ];
+    
+    const updates: any = {};
+    for (const field of allowedFields) {
+      if (req.body[field] !== undefined) {
+        updates[field] = req.body[field];
+      }
+    }
+
+    const user = await User.findByIdAndUpdate(userId, updates, { new: true }).select('-password');
+    if (!user) {
+      res.status(404).json({ error: 'User not found' });
+      return;
+    }
+
+    // Also update localStorage data in response
+    res.status(200).json({ 
+      user: buildUserResponse(user),
+      fullProfile: user
+    });
+  } catch (error) {
+    console.error('Update profile error:', error);
+    res.status(500).json({ error: 'Server error during profile update' });
+  }
 });
 
 export const authRoutes = router;

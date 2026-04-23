@@ -6,6 +6,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { Toaster } from 'react-hot-toast';
+import axios from 'axios';
 import LandingPage from './pages/LandingPage';
 import Login from './pages/Login';
 import BuyerDashboard from './pages/BuyerDashboard';
@@ -14,6 +15,7 @@ import Dashboard from './pages/Dashboard';
 import BuyerMatches from './pages/BuyerMatches';
 import AiMatcher from './pages/AiMatcher';
 import Offload from './pages/Offload';
+import Profile from './pages/Profile';
 import Layout from './components/Layout';
 
 export default function App() {
@@ -26,7 +28,24 @@ export default function App() {
     };
     checkAuth();
     window.addEventListener('storage', checkAuth);
-    return () => window.removeEventListener('storage', checkAuth);
+
+    // Global axios interceptor: auto-logout on 401
+    const interceptorId = axios.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        if (error.response?.status === 401) {
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          setIsAuthenticated(false);
+        }
+        return Promise.reject(error);
+      }
+    );
+
+    return () => {
+      window.removeEventListener('storage', checkAuth);
+      axios.interceptors.response.eject(interceptorId);
+    };
   }, []);
 
   if (isAuthenticated === null) return <div>Loading...</div>;
@@ -43,6 +62,7 @@ export default function App() {
           <Route path="matches" element={<BuyerMatches />} />
           <Route path="ai-matcher" element={<AiMatcher />} />
           <Route path="offload" element={<Offload />} />
+          <Route path="profile" element={<Profile />} />
         </Route>
       </Routes>
     </Router>

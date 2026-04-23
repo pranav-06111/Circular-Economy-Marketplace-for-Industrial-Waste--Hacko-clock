@@ -162,16 +162,35 @@ router.get('/my', authenticate, authorizeRole(['seller']), async (req: AuthReque
 });
 
 router.get('/buyer/matches', authenticate, async (req: AuthRequest, res: Response): Promise<void> => {
+    console.log('>>> Hit /api/listings/buyer/matches route handler');
     try {
       const buyerId = req.user!.userId;
       const buyer = await (User as any).findById(buyerId).select('companyName location industryType acceptedWasteTypes');
       
-      const listings = await (WasteListing as any).find({ status: 'Available' }).populate('seller', 'companyName location');
+      const listings = await (WasteListing as any).find({ 
+        status: { $in: ['Available', 'Active'] } 
+      }).populate('seller', 'companyName location');
+
+      if (!listings || listings.length === 0) {
+        res.status(200).json({ matches: [] });
+        return;
+      }
       
-      const matches = await getSmartMatches(listings.map((l: any) => l.toObject()), [buyer?.toObject()]);
+      console.log(`Buyer Match Request - Buyer ID: ${buyerId}, Listings Found: ${listings.length}`);
+      
+      // Strip photos to avoid token limit issues with Gemini
+      const listingsForAi = listings.map((l: any) => {
+         const obj = l.toObject();
+         delete obj.photos;
+         return obj;
+      });
+
+      const matches = await getSmartMatches(listingsForAi, [buyer?.toObject()]);
+      console.log(`AI Matching complete - Matches returned: ${matches.length}`);
       
       const enrichedMatches = matches.map((m: any) => {
          const listing = listings.find((l: any) => l._id.toString() === m.wasteId);
+         if (!listing) console.warn(`Match returned wasteId ${m.wasteId} not found in current listings`);
          if (listing) {
             return {
                ...m,
@@ -182,16 +201,20 @@ router.get('/buyer/matches', authenticate, async (req: AuthRequest, res: Respons
                co2Savings: listing.co2Savings,
                logisticsEstimate: listing.logisticsEstimate,
                photos: listing.photos || [],
-               location: listing.location
+               location: listing.location,
+               sellerName: listing.seller?.companyName,
+               sellerLocation: listing.seller?.location,
+               carbonCreditPotential: m.carbonCreditPotential,
+               regulatoryComplianceNote: m.regulatoryComplianceNote
             };
          }
          return m;
       });
 
       res.status(200).json({ matches: enrichedMatches });
-    } catch (error) {
-      console.error('Buyer matches fetch error:', error);
-      res.status(500).json({ error: 'Failed to generate matches' });
+    } catch (error: any) {
+      console.error('Buyer matches fetch error - Full Stack:', error);
+      res.status(500).json({ error: 'Failed to generate matches', details: error.message });
     }
 });
 
@@ -205,7 +228,10 @@ router.get('/:id/matches', authenticate, async (req: AuthRequest, res: Response)
       
       const buyers = await (User as any).find({ role: { $in: ['buyer', 'both'] } }).select('companyName location industryType acceptedWasteTypes');
       
-      const matches = await getSmartMatches(listing.toObject(), buyers.map(b => b.toObject()));
+      const listingForAi = listing.toObject();
+      delete listingForAi.photos;
+      
+      const matches = await getSmartMatches(listingForAi, buyers.map(b => b.toObject()));
       
       res.status(200).json({ matches });
     } catch (error) {

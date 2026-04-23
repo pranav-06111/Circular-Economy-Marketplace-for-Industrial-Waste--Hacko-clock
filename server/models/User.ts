@@ -16,6 +16,17 @@ const UserSchema = new mongoose.Schema({
   googleId: { type: String }, // Google OAuth sub
   authProvider: { type: String, enum: ['local', 'google'], default: 'local' },
   avatar: { type: String }, // Google profile picture
+  
+  // Extended profile fields
+  bio: { type: String, default: '' },
+  companySize: { type: String, enum: ['', 'Small (1-50)', 'Medium (51-200)', 'Large (200+)'], default: '' },
+  gstNumber: { type: String, default: '' },
+  address: { type: String, default: '' },
+  website: { type: String, default: '' },
+  wasteTypesGenerated: [{ type: String }], // For sellers: what waste they produce
+  preferredSupplyRadius: { type: String, default: '' }, // For buyers
+  profileCompleted: { type: Boolean, default: false }, // Onboarding flag
+
   createdAt: { type: Date, default: Date.now }
 });
 

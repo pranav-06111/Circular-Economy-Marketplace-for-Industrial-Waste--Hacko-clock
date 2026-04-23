@@ -67,6 +67,7 @@ const Dashboard: React.FC = () => {
   const totalQuantity = listings.reduce((acc, curr) => acc + Number(curr.quantity || 0), 0)
   const totalCo2 = listings.reduce((acc, curr) => acc + Number(curr.co2Savings || 0), 0)
   const estRevenue = listings.reduce((acc, curr) => acc + Number(curr.logisticsEstimate || 0), 0)
+  const totalCarbonCredits = listings.reduce((acc, curr) => acc + (curr.isHazardous ? 0.5 : 2.5), 0); // Mock logic for credits
   const activeListings = listings.filter(l => l.status === 'Active' || l.status === 'Available').length
 
   return (
@@ -91,30 +92,36 @@ const Dashboard: React.FC = () => {
         </div>
 
         {/* Stats */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
           <Card
             icon={Package}
             title="Total Waste Listed"
-            value={`${totalQuantity.toFixed(1)} units`}
-            sub="Lifetime volume"
+            value={`${totalQuantity.toFixed(1)}`}
+            sub="Lifetime units"
           />
           <Card
             icon={TrendingUp}
             title="Active Listings"
             value={activeListings}
-            sub="Currently available"
+            sub="Ready to match"
           />
           <Card
             icon={Leaf}
             title="CO₂ Saved"
-            value={`${totalCo2.toFixed(1)} tons`}
+            value={`${totalCo2.toFixed(1)}t`}
             sub="Environmental impact"
           />
           <Card
+            icon={TrendingUp}
+            title="Carbon Credits"
+            value={totalCarbonCredits.toFixed(1)}
+            sub="ESG Generation"
+          />
+          <Card
             icon={DollarSign}
-            title="Est. Logistics Value"
+            title="Logistics Value"
             value={`₹${estRevenue.toLocaleString()}`}
-            sub="From AI logistics"
+            sub="AI Est. Savings"
           />
         </div>
 

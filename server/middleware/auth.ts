@@ -17,11 +17,12 @@ export const authenticate = (req: AuthRequest, res: Response, next: NextFunction
 
   const token = authHeader.split(' ')[1];
   try {
-    const defaultSecret = "supersecretjwtkey";
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || defaultSecret) as { userId: string, role?: string };
+    const secret = process.env.JWT_SECRET || "supersecretjwtkey";
+    const decoded = jwt.verify(token, secret) as { userId: string, role?: string };
     req.user = decoded;
     next();
-  } catch (err) {
+  } catch (err: any) {
+    console.error('JWT Verification Failed:', err.message, 'Secret present:', !!process.env.JWT_SECRET);
     res.status(401).json({ error: 'Invalid token' });
   }
 };

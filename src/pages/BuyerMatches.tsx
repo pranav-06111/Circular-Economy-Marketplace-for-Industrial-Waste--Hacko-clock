@@ -19,6 +19,8 @@ interface MatchResult {
   co2Savings?: number;
   logisticsEstimate?: number;
   location?: string;
+  carbonCreditPotential?: string;
+  regulatoryComplianceNote?: string;
 }
 
 export default function BuyerMatches() {
@@ -38,9 +40,10 @@ export default function BuyerMatches() {
       // Sort matches descending by score
       const sorted = (res.data.matches || []).sort((a: MatchResult, b: MatchResult) => b.compatibilityScore - a.compatibilityScore);
       setMatches(sorted);
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      toast.error('Failed to run AI matching engine.');
+      const msg = error.response?.data?.details || error.response?.data?.error || 'Failed to run AI matching engine.';
+      toast.error(msg);
     } finally {
       setLoading(false);
     }
@@ -118,10 +121,21 @@ export default function BuyerMatches() {
                      <div className="flex items-center text-slate-600 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">
                        <Leaf size={14} className="mr-1.5 text-emerald-500" /> Save {match.co2Savings?.toFixed(1)}t CO₂
                      </div>
+                     {match.carbonCreditPotential && (
+                       <div className="flex items-center text-emerald-600 bg-emerald-50 dark:bg-emerald-500/10 px-2 py-1 rounded font-bold">
+                         <Activity size={14} className="mr-1.5" /> {match.carbonCreditPotential} Credits
+                       </div>
+                     )}
                      <div className="flex items-center text-slate-600 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">
                        <Truck size={14} className="mr-1.5 text-slate-400" /> Est. Trans: ₹{match.logisticsEstimate?.toLocaleString()}
                      </div>
                   </div>
+
+                  {match.regulatoryComplianceNote && (
+                    <div className="text-[10px] text-slate-400 italic mb-2">
+                      {match.regulatoryComplianceNote}
+                    </div>
+                  )}
 
                   {match.isHazardous && match.requiredPermits && match.requiredPermits.length > 0 && (
                       <div className="bg-rose-50 dark:bg-rose-950/30 p-3 rounded-lg border border-rose-100 dark:border-rose-900/50 mt-2">

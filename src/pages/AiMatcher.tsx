@@ -58,9 +58,36 @@ export default function AiMatcher() {
   const [matches, setMatches] = useState<MatchResult[]>([]);
   const [completedMatch, setCompletedMatch] = useState<any>(null);
 
+  // Extract role
+  const userString = localStorage.getItem('user');
+  const user = userString ? JSON.parse(userString) : null;
+  const role = user?.role || 'seller';
+
   useEffect(() => {
-    fetchMyListings();
-  }, []);
+    if (role === 'seller' || role === 'both') {
+      fetchMyListings();
+    }
+  }, [role]);
+
+  const handleBuyerMatch = async () => {
+    setLoading(true);
+    setMatches([]);
+    setCompletedMatch(null);
+    try {
+      const token = localStorage.getItem('token');
+      const matchRes = await axios.get('/api/listings/buyer/matches', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setMatches(matchRes.data.matches.sort((a: any, b: any) => b.compatibilityScore - a.compatibilityScore));
+      toast.success("AI Analysis Complete!");
+    } catch (error: any) {
+      console.error(error);
+      const msg = error.response?.data?.details || error.response?.data?.error || "Matching engine failed. Check API connectivity.";
+      toast.error(msg);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const fetchMyListings = async () => {
     try {
@@ -162,91 +189,114 @@ export default function AiMatcher() {
           <p className="text-slate-500 dark:text-slate-400 font-medium">Connect with high-compatibility circular economy partners instantly.</p>
         </div>
         
-        <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700">
-           <button 
-             onClick={() => setMode('select')}
-             className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${mode === 'select' ? 'bg-white dark:bg-slate-900 text-emerald-600 shadow-sm' : 'text-slate-500'}`}
-           >
-             Existing Listing
-           </button>
-           <button 
-             onClick={() => setMode('upload')}
-             className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${mode === 'upload' ? 'bg-white dark:bg-slate-900 text-emerald-600 shadow-sm' : 'text-slate-500'}`}
-           >
-             Quick Match (Photo)
-           </button>
-        </div>
+        {role !== 'buyer' && (
+          <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700">
+             <button 
+               onClick={() => setMode('select')}
+               className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${mode === 'select' ? 'bg-white dark:bg-slate-900 text-emerald-600 shadow-sm' : 'text-slate-500'}`}
+             >
+               Existing Listing
+             </button>
+             <button 
+               onClick={() => setMode('upload')}
+               className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${mode === 'upload' ? 'bg-white dark:bg-slate-900 text-emerald-600 shadow-sm' : 'text-slate-500'}`}
+             >
+               Quick Match (Photo)
+             </button>
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
         {/* Left Column: Input */}
         <div className="lg:col-span-1 space-y-8">
            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 shadow-sm">
-              <h3 className="text-lg font-bold mb-6 flex items-center">
-                 <Search size={20} className="mr-2 text-emerald-500" />
-                 {mode === 'select' ? 'Select Resource' : 'Waste Snapshot'}
-              </h3>
+              {role === 'buyer' ? (
+                <>
+                  <h3 className="text-lg font-bold mb-6 flex items-center">
+                     <Search size={20} className="mr-2 text-emerald-500" />
+                     Find Raw Materials
+                  </h3>
+                  <p className="text-sm text-slate-500 mb-6">Our AI will scan all active waste listings and match them against your company profile.</p>
 
-              {mode === 'select' ? (
-                <div className="space-y-4">
-                   <label className="block text-sm font-semibold text-slate-500 uppercase tracking-wider">Your Active Listings</label>
-                   {listings.length === 0 ? (
-                     <div className="text-sm text-slate-400 py-4 italic">No active listings found.</div>
-                   ) : (
-                     <select 
-                       value={selectedListingId} 
-                       onChange={(e) => setSelectedListingId(e.target.value)}
-                       className="w-full px-4 py-3 border border-slate-300 dark:border-slate-700 rounded-xl focus:ring-emerald-500 focus:border-emerald-500 dark:bg-slate-950 font-bold"
-                     >
-                       <option value="">-- Select Listing --</option>
-                       {listings.map(l => <option key={l._id} value={l._id}>{l.wasteType} ({l.quantity} {l.unit})</option>)}
-                     </select>
-                   )}
-                </div>
+                  <button 
+                    onClick={handleBuyerMatch}
+                    disabled={loading}
+                    className="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-4 rounded-2xl shadow-lg shadow-emerald-500/20 transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
+                  >
+                    {loading ? <Activity className="animate-spin" /> : <Zap size={18} />}
+                    {loading ? 'AI AGENTS RUNNING...' : 'FIND MATERIALS WITH AI'}
+                  </button>
+                </>
               ) : (
-                <div className="space-y-6">
-                   <div 
-                     className={`border-2 border-dashed rounded-2xl p-4 text-center cursor-pointer transition-all ${previewUrl ? 'border-emerald-500 bg-emerald-50/10' : 'border-slate-300 dark:border-slate-700 hover:border-emerald-400'}`}
-                     onClick={() => fileInputRef.current?.click()}
-                   >
-                     <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handlePhotoChange} />
-                     {previewUrl ? (
-                       <img src={previewUrl} className="w-full h-40 object-cover rounded-xl shadow-sm" alt="Preview" />
-                     ) : (
-                       <div className="py-8 flex flex-col items-center">
-                         <UploadCloud size={40} className="text-slate-300 mb-2" />
-                         <span className="text-xs font-bold text-slate-500 uppercase">Snap to Analyze</span>
-                       </div>
-                     )}
-                   </div>
-                   
-                   <div className="space-y-4">
-                      <div>
-                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Waste Type</label>
-                        <input value={quickForm.wasteType} onChange={e => setQuickForm({...quickForm, wasteType: e.target.value})} className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-lg text-sm bg-transparent" />
-                      </div>
-                      <div className="grid grid-cols-2 gap-4">
-                         <div>
-                           <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Quantity</label>
-                           <input type="number" value={quickForm.quantity} onChange={e => setQuickForm({...quickForm, quantity: e.target.value})} className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-lg text-sm bg-transparent" />
-                         </div>
-                         <div>
-                           <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">City</label>
-                           <input value={quickForm.location} onChange={e => setQuickForm({...quickForm, location: e.target.value})} className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-lg text-sm bg-transparent" />
-                         </div>
-                      </div>
-                   </div>
-                </div>
-              )}
+                <>
+                  <h3 className="text-lg font-bold mb-6 flex items-center">
+                     <Search size={20} className="mr-2 text-emerald-500" />
+                     {mode === 'select' ? 'Select Resource' : 'Waste Snapshot'}
+                  </h3>
 
-              <button 
-                onClick={handleFindMatches}
-                disabled={loading}
-                className="w-full mt-8 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-4 rounded-2xl shadow-lg shadow-emerald-500/20 transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
-              >
-                {loading ? <Activity className="animate-spin" /> : <Zap size={18} />}
-                {loading ? 'AI AGENTS RUNNING...' : 'FIND MATCHES WITH AI'}
-              </button>
+                  {mode === 'select' ? (
+                    <div className="space-y-4">
+                       <label className="block text-sm font-semibold text-slate-500 uppercase tracking-wider">Your Active Listings</label>
+                       {listings.length === 0 ? (
+                         <div className="text-sm text-slate-400 py-4 italic">No active listings found.</div>
+                       ) : (
+                         <select 
+                           value={selectedListingId} 
+                           onChange={(e) => setSelectedListingId(e.target.value)}
+                           className="w-full px-4 py-3 border border-slate-300 dark:border-slate-700 rounded-xl focus:ring-emerald-500 focus:border-emerald-500 dark:bg-slate-950 font-bold"
+                         >
+                           <option value="">-- Select Listing --</option>
+                           {listings.map(l => <option key={l._id} value={l._id}>{l.wasteType} ({l.quantity} {l.unit})</option>)}
+                         </select>
+                       )}
+                    </div>
+                  ) : (
+                    <div className="space-y-6">
+                       <div 
+                         className={`border-2 border-dashed rounded-2xl p-4 text-center cursor-pointer transition-all ${previewUrl ? 'border-emerald-500 bg-emerald-50/10' : 'border-slate-300 dark:border-slate-700 hover:border-emerald-400'}`}
+                         onClick={() => fileInputRef.current?.click()}
+                       >
+                         <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handlePhotoChange} />
+                         {previewUrl ? (
+                           <img src={previewUrl} className="w-full h-40 object-cover rounded-xl shadow-sm" alt="Preview" />
+                         ) : (
+                           <div className="py-8 flex flex-col items-center">
+                             <UploadCloud size={40} className="text-slate-300 mb-2" />
+                             <span className="text-xs font-bold text-slate-500 uppercase">Snap to Analyze</span>
+                           </div>
+                         )}
+                       </div>
+                       
+                       <div className="space-y-4">
+                          <div>
+                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Waste Type</label>
+                            <input value={quickForm.wasteType} onChange={e => setQuickForm({...quickForm, wasteType: e.target.value})} className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-lg text-sm bg-transparent" />
+                          </div>
+                          <div className="grid grid-cols-2 gap-4">
+                             <div>
+                               <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Quantity</label>
+                               <input type="number" value={quickForm.quantity} onChange={e => setQuickForm({...quickForm, quantity: e.target.value})} className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-lg text-sm bg-transparent" />
+                             </div>
+                             <div>
+                               <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">City</label>
+                               <input value={quickForm.location} onChange={e => setQuickForm({...quickForm, location: e.target.value})} className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-lg text-sm bg-transparent" />
+                             </div>
+                          </div>
+                       </div>
+                    </div>
+                  )}
+
+                  <button 
+                    onClick={handleFindMatches}
+                    disabled={loading}
+                    className="w-full mt-8 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-4 rounded-2xl shadow-lg shadow-emerald-500/20 transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
+                  >
+                    {loading ? <Activity className="animate-spin" /> : <Zap size={18} />}
+                    {loading ? 'AI AGENTS RUNNING...' : 'FIND BUYERS WITH AI'}
+                  </button>
+                </>
+              )}
            </div>
         </div>
 
@@ -294,9 +344,11 @@ export default function AiMatcher() {
                           <div className="flex-1">
                              <div className="flex justify-between items-start mb-2">
                                 <div>
-                                   <h3 className="text-xl font-bold text-slate-900 dark:text-white group-hover:text-emerald-500 transition-colors">{match.buyerName || 'Industrial Consumer'}</h3>
+                                   <h3 className="text-xl font-bold text-slate-900 dark:text-white group-hover:text-emerald-500 transition-colors">
+                                     {role === 'buyer' ? (match.sellerName || 'Verified Seller') : (match.buyerName || 'Industrial Consumer')}
+                                   </h3>
                                    <div className="flex items-center text-xs text-slate-500 font-medium">
-                                      <MapPin size={12} className="mr-1" /> {match.location || 'Maharashtra'} • {match.industryType || 'Recycling'}
+                                      <MapPin size={12} className="mr-1" /> {role === 'buyer' ? (match.sellerLocation || match.location) : match.location} • {match.industryType || (role === 'buyer' ? 'Waste Producer' : 'Recycling')}
                                    </div>
                                 </div>
                                 <div className="flex items-center gap-2">
@@ -314,9 +366,26 @@ export default function AiMatcher() {
                                 <div className="flex items-center text-xs font-bold text-slate-500">
                                    <Truck size={14} className="mr-1.5 text-slate-400" /> ₹{match.logisticsEstimate?.toLocaleString()} est.
                                 </div>
-                                <div className="flex items-center text-xs font-bold text-emerald-600">
-                                   <Leaf size={14} className="mr-1.5" /> {match.co2Savings?.toFixed(1)}t CO₂ Saved
+                                 <div className="flex items-center text-xs font-bold text-emerald-600">
+                                    <Leaf size={14} className="mr-1.5" /> {match.co2Savings?.toFixed(1)}t CO₂ Saved
+                                 </div>
+                                 {match.carbonCreditPotential && (
+                                   <div className="flex items-center text-xs font-bold text-sky-600 bg-sky-50 dark:bg-sky-500/10 px-2 py-1 rounded-lg">
+                                      <Activity size={14} className="mr-1.5" /> {match.carbonCreditPotential} Carbon Credits
+                                   </div>
+                                 )}
+                              </div>
+
+                              {match.regulatoryComplianceNote && (
+                                <div className="mt-4 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-700/50">
+                                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center mb-1">
+                                    <ShieldCheck size={12} className="mr-1 text-emerald-500" /> Regulatory Compliance (HW Rules 2016)
+                                  </p>
+                                  <p className="text-[10px] text-slate-500 italic leading-tight">
+                                    {match.regulatoryComplianceNote}
+                                  </p>
                                 </div>
+                              )}
                                 <button 
                                   onClick={() => handleCompleteMatch(match)}
                                   className="ml-auto bg-slate-900 dark:bg-emerald-500 hover:bg-emerald-400 text-white dark:text-slate-950 px-5 py-2 rounded-xl text-xs font-black tracking-widest transition-all active:scale-95 flex items-center gap-2"
@@ -325,7 +394,6 @@ export default function AiMatcher() {
                                 </button>
                              </div>
                           </div>
-                       </div>
                     </motion.div>
                   ))}
                </motion.div>
