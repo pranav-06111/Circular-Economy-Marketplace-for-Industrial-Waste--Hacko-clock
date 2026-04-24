@@ -97,8 +97,9 @@ export default function SellerDashboard() {
       </div>
 
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden">
-        <div className="p-6 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center">
+        <div className="p-6 border-b border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
             <h2 className="text-lg font-bold">My Listings Directory</h2>
+            <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest md:hidden">Scroll left to view more →</div>
         </div>
         
         {listings.length === 0 ? (

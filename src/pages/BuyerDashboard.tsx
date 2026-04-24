@@ -80,7 +80,7 @@ export default function BuyerDashboard() {
       </div>
 
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm mb-8">
-        <form onSubmit={handleApplyFilters} className="flex flex-col md:flex-row gap-4 items-end">
+        <form onSubmit={handleApplyFilters} className="flex flex-col md:flex-row gap-4 items-stretch md:items-end">
            <div className="w-full md:w-1/4">
              <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Waste Type</label>
              <select 

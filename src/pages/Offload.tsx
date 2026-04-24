@@ -201,18 +201,19 @@ export default function Offload() {
 
   return (
     <div className="max-w-5xl mx-auto">
-      <div className="mb-0 flex justify-between items-end">
+      <div className="mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight mb-2 flex items-center">
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight mb-2 flex items-center">
             <Factory className="mr-3 text-emerald-500" />
             List Industrial Waste
           </h1>
-          <p className="text-slate-500 dark:text-slate-400">Offer your byproduct to verified buyers. Upload photos for instant AI regulatory analysis.</p>
+          <p className="text-sm md:text-base text-slate-500 dark:text-slate-400">Offer your byproduct to verified buyers. Upload photos for instant AI regulatory analysis.</p>
         </div>
-        <button type="button" onClick={clearDraft} className="text-slate-400 hover:text-rose-500 text-sm flex items-center font-medium transition-colors mb-2">
+        <button type="button" onClick={clearDraft} className="text-slate-400 hover:text-rose-500 text-sm flex items-center font-medium transition-colors">
           <Trash2 size={16} className="mr-1" /> Clear Draft
         </button>
       </div>
+
 
       <form onSubmit={handleSubmit} className="mt-8 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden">
         <div className="p-6 md:p-8 space-y-8">

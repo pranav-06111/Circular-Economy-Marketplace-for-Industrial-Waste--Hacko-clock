@@ -1,12 +1,17 @@
 import { useState, useEffect } from 'react';
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, LogOut, PackagePlus, Leaf, Search, Zap, Activity, UserCircle, ClipboardList } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+
+import { LayoutDashboard, LogOut, PackagePlus, Leaf, Search, Zap, Activity, UserCircle, ClipboardList, Menu, X } from 'lucide-react';
+
 import OnboardingModal from './OnboardingModal';
 
 export default function Layout({ setAuth }: { setAuth: (val: boolean) => void }) {
   const navigate = useNavigate();
   const location = useLocation();
-  const [showOnboarding, setShowOnboarding] = useState(false);
+   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -64,8 +69,92 @@ export default function Layout({ setAuth }: { setAuth: (val: boolean) => void })
 
   return (
     <div className="flex h-screen bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white font-sans">
-      {/* Onboarding Modal for first-time sellers */}
+       {/* Onboarding Modal for first-time sellers */}
       {showOnboarding && <OnboardingModal onComplete={handleOnboardingComplete} />}
+
+      {/* Mobile Menu Overlay */}
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-40 md:hidden"
+            />
+            <motion.aside
+              initial={{ x: '-100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '-100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="fixed inset-y-0 left-0 w-72 bg-white dark:bg-slate-950 z-50 md:hidden flex flex-col shadow-2xl"
+            >
+              <div className="h-16 flex items-center justify-between px-6 border-b border-slate-200 dark:border-slate-800">
+                <div className="flex items-center">
+                  <Leaf className="text-emerald-500 mr-2" />
+                  <span className="font-bold text-xl tracking-tight">EcoMatch</span>
+                </div>
+                <button 
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+              
+              <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+                {navItems.map((item) => {
+                  const Icon = item.icon;
+                  const isActive = location.pathname === item.path || (item.path !== '/dashboard' && location.pathname.startsWith(item.path));
+                  return (
+                    <Link
+                      key={item.name + item.path}
+                      to={item.path}
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
+                        isActive 
+                        ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400' 
+                        : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400'
+                      }`}
+                    >
+                      <Icon size={20} />
+                      <span className="font-medium">{item.name}</span>
+                    </Link>
+                  );
+                })}
+              </nav>
+
+              <div className="p-4 border-t border-slate-200 dark:border-slate-800">
+                <Link 
+                  to="/profile" 
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="flex items-center px-4 py-3 mb-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group"
+                >
+                  {user?.avatar ? (
+                    <img src={user.avatar} alt="" className="w-9 h-9 rounded-full mr-3 border-2 border-emerald-500/30" />
+                  ) : (
+                    <div className="w-9 h-9 rounded-full mr-3 bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center border-2 border-emerald-500/30">
+                      <UserCircle size={18} className="text-emerald-500" />
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-bold truncate">{user?.name || user?.companyName || 'User'}</div>
+                    <div className="text-xs text-slate-500 capitalize">{role} Account</div>
+                  </div>
+                </Link>
+                <button 
+                  onClick={handleLogout}
+                  className="flex items-center space-x-3 px-4 py-3 rounded-lg w-full text-left text-slate-600 dark:text-slate-400 hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-500/10 dark:hover:text-rose-400 transition-colors"
+                >
+                  <LogOut size={20} />
+                  <span className="font-medium">Sign Out</span>
+                </button>
+              </div>
+            </motion.aside>
+          </>
+        )}
+      </AnimatePresence>
 
       {/* Sidebar */}
       <aside className="w-64 bg-white dark:bg-slate-950 border-r border-slate-200 dark:border-slate-800 hidden md:flex flex-col">
@@ -121,15 +210,30 @@ export default function Layout({ setAuth }: { setAuth: (val: boolean) => void })
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <header className="h-16 bg-white dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-6 md:hidden">
+        <header className="h-16 bg-white dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-4 md:hidden sticky top-0 z-30">
           <div className="flex items-center">
-            <Leaf className="text-emerald-500 mr-2" />
-            <span className="font-bold text-xl tracking-tight">EcoMatch</span>
+            <button 
+              onClick={() => setIsMobileMenuOpen(true)}
+              className="p-2 mr-2 text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+            >
+              <Menu size={24} />
+            </button>
+            <div className="flex items-center">
+              <Leaf className="text-emerald-500 mr-2" />
+              <span className="font-bold text-lg tracking-tight">EcoMatch</span>
+            </div>
           </div>
-          <button onClick={handleLogout} className="text-slate-600 hover:text-rose-500">
-            <LogOut size={20} />
-          </button>
+          <div className="flex items-center space-x-2">
+            <Link to="/profile" className="w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center border border-emerald-500/20 overflow-hidden">
+              {user?.avatar ? (
+                <img src={user.avatar} alt="" className="w-full h-full object-cover" />
+              ) : (
+                <UserCircle size={18} className="text-emerald-500" />
+              )}
+            </Link>
+          </div>
         </header>
+
 
         <div className="flex-1 overflow-auto p-4 md:p-8">
           <Outlet />

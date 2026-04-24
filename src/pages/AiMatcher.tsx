@@ -225,14 +225,16 @@ export default function AiMatcher() {
   };
 
   return (
-    <div className="max-w-6xl mx-auto py-8 px-4">
+    <div className="max-w-6xl mx-auto py-6 md:py-8 px-4">
+
       <div className="flex flex-col md:flex-row md:items-center justify-between mb-12 gap-6">
         <div>
-          <h1 className="text-4xl font-black tracking-tight text-slate-900 dark:text-white mb-2 flex items-center">
+          <h1 className="text-2xl md:text-4xl font-black tracking-tight text-slate-900 dark:text-white mb-2 flex items-center">
             <Zap className="mr-3 text-emerald-500 fill-emerald-500" />
             AI Smart Matcher
           </h1>
-          <p className="text-slate-500 dark:text-slate-400 font-medium">Connect with high-compatibility circular economy partners instantly.</p>
+          <p className="text-sm md:text-base text-slate-500 dark:text-slate-400 font-medium">Connect with high-compatibility circular economy partners instantly.</p>
+
         </div>
         
         {role !== 'buyer' && (
@@ -256,7 +258,8 @@ export default function AiMatcher() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
         {/* Left Column: Input */}
         <div className="lg:col-span-1 space-y-8">
-           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 shadow-sm">
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl md:rounded-3xl p-5 md:p-8 shadow-sm">
+
               {role === 'buyer' ? (
                 <>
                   <h3 className="text-lg font-bold mb-5 flex items-center">
@@ -412,8 +415,9 @@ export default function AiMatcher() {
              {loading ? (
                 <motion.div 
                   initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                  className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-12 text-center flex flex-col items-center justify-center min-h-[400px]"
+                  className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl md:rounded-3xl p-8 md:p-12 text-center flex flex-col items-center justify-center min-h-[300px] md:min-h-[400px]"
                 >
+
                    <div className="relative mb-8">
                       <div className="w-24 h-24 rounded-full border-4 border-emerald-100 dark:border-emerald-500/10 border-t-emerald-500 animate-spin" />
                       <Cpu className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-emerald-500" size={32} />
@@ -441,10 +445,10 @@ export default function AiMatcher() {
                           <Leaf size={120} className="text-emerald-500" />
                        </div>
 
-                       <div className="flex flex-col md:flex-row gap-6 relative z-10">
-                          <div className="flex-shrink-0 w-24 h-24 bg-slate-50 dark:bg-slate-950 rounded-2xl border border-slate-100 dark:border-slate-800 flex flex-col items-center justify-center">
-                             <div className="text-3xl font-black text-emerald-500">{match.compatibilityScore}%</div>
-                             <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mt-1">Match</div>
+                       <div className="flex flex-col sm:flex-row gap-4 md:gap-6 relative z-10">
+                          <div className="flex-shrink-0 w-20 h-20 md:w-24 md:h-24 bg-slate-50 dark:bg-slate-950 rounded-2xl border border-slate-100 dark:border-slate-800 flex flex-col items-center justify-center self-start sm:self-center">
+                             <div className="text-2xl md:text-3xl font-black text-emerald-500">{match.compatibilityScore}%</div>
+                             <div className="text-[8px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mt-1">Match</div>
                           </div>
 
                           <div className="flex-1">
@@ -503,31 +507,32 @@ export default function AiMatcher() {
                                 </div>
                               )}
 
-                              <div className="flex items-center gap-3 mt-4">
+                              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mt-6">
                                 <button
                                   onClick={() => setMapMatch(match)}
-                                  className="bg-slate-100 dark:bg-slate-800 hover:bg-sky-50 dark:hover:bg-sky-500/10 text-slate-700 dark:text-slate-300 px-4 py-2 rounded-xl text-xs font-bold tracking-wider transition-all active:scale-95 flex items-center gap-2 border border-slate-200 dark:border-slate-700"
+                                  className="bg-slate-100 dark:bg-slate-800 hover:bg-sky-50 dark:hover:bg-sky-500/10 text-slate-700 dark:text-slate-300 px-4 py-2.5 rounded-xl text-xs font-bold tracking-wider transition-all active:scale-95 flex items-center justify-center gap-2 border border-slate-200 dark:border-slate-700 w-full sm:w-auto"
                                 >
                                   <MapIcon size={14} /> VIEW ON MAP
                                 </button>
                                 <button 
                                   onClick={() => handleCompleteMatch(match)}
-                                  className="ml-auto bg-slate-900 dark:bg-emerald-500 hover:bg-emerald-400 text-white dark:text-slate-950 px-5 py-2 rounded-xl text-xs font-black tracking-widest transition-all active:scale-95 flex items-center gap-2"
+                                  className="sm:ml-auto bg-slate-900 dark:bg-emerald-500 hover:bg-emerald-400 text-white dark:text-slate-950 px-5 py-2.5 rounded-xl text-xs font-black tracking-widest transition-all active:scale-95 flex items-center justify-center gap-2 w-full sm:w-auto"
                                 >
                                    EXPRESS INTEREST <ArrowRight size={14} />
                                 </button>
                               </div>
+
                              </div>
                           </div>
                     </motion.div>
                   ))}
                </motion.div>
              ) : completedMatch ? (
-               <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="bg-emerald-500 text-slate-950 rounded-3xl p-12 text-center flex flex-col items-center">
-                  <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mb-6">
-                     <CheckCircle size={40} className="text-white" />
+               <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="bg-emerald-500 text-slate-950 rounded-2xl md:rounded-3xl p-6 md:p-12 text-center flex flex-col items-center">
+                  <div className="w-16 h-16 md:w-20 md:h-20 bg-white/20 rounded-full flex items-center justify-center mb-6">
+                     <CheckCircle size={32} className="text-white" />
                   </div>
-                  <h2 className="text-3xl font-black mb-4">MATCH COMPLETED</h2>
+                  <h2 className="text-xl md:text-3xl font-black mb-4">MATCH COMPLETED</h2>
                   <p className="text-emerald-950 font-medium mb-8 max-w-md">
                      Your industrial resource has been secured. The transaction and ESG impact have been anchored on-chain.
                   </p>
@@ -556,7 +561,7 @@ export default function AiMatcher() {
                   </button>
                </motion.div>
              ) : (
-                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-12 text-center flex flex-col items-center justify-center min-h-[400px]">
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl md:rounded-3xl p-8 md:p-12 text-center flex flex-col items-center justify-center min-h-[300px] md:min-h-[400px]">
                    <Activity size={48} className="text-slate-200 mb-4" />
                    <h3 className="text-xl font-bold text-slate-400">Ready to Match</h3>
                    <p className="text-slate-500 text-sm">Select a resource on the left to activate AI agents.</p>
