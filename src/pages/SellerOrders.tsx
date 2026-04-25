@@ -97,7 +97,7 @@ export default function SellerOrders() {
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-black tracking-tight mb-1 flex items-center">
-          <Package className="mr-3 text-emerald-500" /> My Waste Matches
+          <Package className="mr-3 text-purple-500" /> My Waste Matches
         </h1>
         <p className="text-slate-500 dark:text-slate-400 font-medium">
           Track all buyer interest and completed transactions for your waste listings.
@@ -128,7 +128,7 @@ export default function SellerOrders() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search waste type, buyer..."
-              className="w-full pl-9 pr-3 py-2 border border-slate-200 dark:border-slate-700 rounded-lg text-sm bg-white dark:bg-slate-900 focus:ring-emerald-500 focus:border-emerald-500"
+              className="w-full pl-9 pr-3 py-2 border border-slate-200 dark:border-slate-700 rounded-lg text-sm bg-white dark:bg-slate-900 focus:ring-emerald-500 focus:border-indigo-500"
             />
           </div>
           <div className="relative">
@@ -150,11 +150,11 @@ export default function SellerOrders() {
       {/* Content */}
       {loading ? (
         <div className="flex flex-col items-center justify-center py-20">
-          <Loader2 size={40} className="text-emerald-500 animate-spin mb-4" />
+          <Loader2 size={40} className="text-purple-500 animate-spin mb-4" />
           <p className="text-slate-500 font-medium">Loading your orders...</p>
         </div>
       ) : filtered.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-20 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800">
+        <div className="flex flex-col items-center justify-center py-20 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800">
           <div className="w-20 h-20 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mb-6">
             <Inbox size={36} className="text-slate-400" />
           </div>
@@ -181,7 +181,7 @@ export default function SellerOrders() {
                 <div className="flex flex-col md:flex-row gap-5">
                   {/* Left: Score */}
                   <div className="flex-shrink-0 w-20 h-20 bg-slate-50 dark:bg-slate-950 rounded-2xl border border-slate-100 dark:border-slate-800 flex flex-col items-center justify-center">
-                    <div className="text-2xl font-black text-emerald-500">{match.matchScore || 0}%</div>
+                    <div className="text-2xl font-black text-purple-500">{match.matchScore || 0}%</div>
                     <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Match</div>
                   </div>
 
@@ -189,7 +189,7 @@ export default function SellerOrders() {
                   <div className="flex-1 min-w-0">
                     <div className="flex flex-wrap items-start justify-between gap-2 mb-2">
                       <div>
-                        <h3 className="text-lg font-bold text-slate-900 dark:text-white group-hover:text-emerald-500 transition-colors">
+                        <h3 className="text-lg font-bold text-slate-900 dark:text-white group-hover:text-purple-500 transition-colors">
                           {match.listing?.wasteType || 'Unknown Waste'}
                         </h3>
                         <p className="text-xs text-slate-500 flex items-center font-medium">
@@ -252,7 +252,7 @@ export default function SellerOrders() {
       {detailMatch && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setDetailMatch(null)} />
-          <div className="relative w-full max-w-lg bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden z-10 max-h-[90vh] overflow-y-auto">
+          <div className="relative w-full max-w-lg bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden z-10 max-h-[90vh] overflow-y-auto">
             <div className="bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 px-6 py-5 text-white">
               <div className="flex items-center justify-between">
                 <div>
@@ -309,7 +309,7 @@ export default function SellerOrders() {
               )}
 
               {detailMatch.suggestedUseCase && (
-                <div className="bg-emerald-50 dark:bg-emerald-500/5 rounded-xl p-4 border border-emerald-100 dark:border-emerald-500/20">
+                <div className="bg-emerald-50 dark:bg-emerald-500/5 rounded-xl p-4 border border-purple-100 dark:border-purple-500/20">
                   <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-1">Suggested Use Case</p>
                   <p className="text-sm text-emerald-800 dark:text-emerald-300">{detailMatch.suggestedUseCase}</p>
                 </div>

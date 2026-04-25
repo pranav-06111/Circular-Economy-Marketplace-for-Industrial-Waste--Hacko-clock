@@ -230,7 +230,7 @@ export default function AiMatcher() {
       <div className="flex flex-col md:flex-row md:items-center justify-between mb-12 gap-6">
         <div>
           <h1 className="text-2xl md:text-4xl font-black tracking-tight text-slate-900 dark:text-white mb-2 flex items-center">
-            <Zap className="mr-3 text-emerald-500 fill-emerald-500" />
+            <Zap className="mr-3 text-purple-500 fill-emerald-500" />
             AI Smart Matcher
           </h1>
           <p className="text-sm md:text-base text-slate-500 dark:text-slate-400 font-medium">Connect with high-compatibility circular economy partners instantly.</p>
@@ -258,12 +258,12 @@ export default function AiMatcher() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
         {/* Left Column: Input */}
         <div className="lg:col-span-1 space-y-8">
-            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl md:rounded-3xl p-5 md:p-8 shadow-sm">
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl md:rounded-2xl p-5 md:p-8 shadow-sm">
 
               {role === 'buyer' ? (
                 <>
                   <h3 className="text-lg font-bold mb-5 flex items-center">
-                     <Search size={20} className="mr-2 text-emerald-500" />
+                     <Search size={20} className="mr-2 text-purple-500" />
                      Find Raw Materials
                   </h3>
 
@@ -273,7 +273,7 @@ export default function AiMatcher() {
                       <select
                         value={buyerPrefs.materialType}
                         onChange={e => setBuyerPrefs({...buyerPrefs, materialType: e.target.value})}
-                        className="w-full px-4 py-2.5 border border-slate-300 dark:border-slate-700 rounded-xl focus:ring-emerald-500 focus:border-emerald-500 dark:bg-slate-950 text-sm font-medium"
+                        className="w-full px-4 py-2.5 border border-slate-300 dark:border-slate-700 rounded-xl focus:ring-emerald-500 focus:border-indigo-500 dark:bg-slate-950 text-sm font-medium"
                       >
                         <option value="">All Types (AI decides)</option>
                         <option value="Plastic Waste">Plastic / Polymer</option>
@@ -298,7 +298,7 @@ export default function AiMatcher() {
                         value={buyerPrefs.location}
                         onChange={e => setBuyerPrefs({...buyerPrefs, location: e.target.value})}
                         placeholder="e.g. Pune, Mumbai, Delhi"
-                        className="w-full px-4 py-2.5 border border-slate-300 dark:border-slate-700 rounded-xl focus:ring-emerald-500 focus:border-emerald-500 dark:bg-slate-950 text-sm"
+                        className="w-full px-4 py-2.5 border border-slate-300 dark:border-slate-700 rounded-xl focus:ring-emerald-500 focus:border-indigo-500 dark:bg-slate-950 text-sm"
                       />
                     </div>
 
@@ -310,7 +310,7 @@ export default function AiMatcher() {
                           value={buyerPrefs.minQuantity}
                           onChange={e => setBuyerPrefs({...buyerPrefs, minQuantity: e.target.value})}
                           placeholder="e.g. 5"
-                          className="w-full px-4 py-2.5 border border-slate-300 dark:border-slate-700 rounded-xl focus:ring-emerald-500 focus:border-emerald-500 dark:bg-slate-950 text-sm font-mono"
+                          className="w-full px-4 py-2.5 border border-slate-300 dark:border-slate-700 rounded-xl focus:ring-emerald-500 focus:border-indigo-500 dark:bg-slate-950 text-sm font-mono"
                         />
                       </div>
                       <div>
@@ -320,7 +320,7 @@ export default function AiMatcher() {
                           value={buyerPrefs.useCase}
                           onChange={e => setBuyerPrefs({...buyerPrefs, useCase: e.target.value})}
                           placeholder="e.g. Recycling"
-                          className="w-full px-4 py-2.5 border border-slate-300 dark:border-slate-700 rounded-xl focus:ring-emerald-500 focus:border-emerald-500 dark:bg-slate-950 text-sm"
+                          className="w-full px-4 py-2.5 border border-slate-300 dark:border-slate-700 rounded-xl focus:ring-emerald-500 focus:border-indigo-500 dark:bg-slate-950 text-sm"
                         />
                       </div>
                     </div>
@@ -331,7 +331,7 @@ export default function AiMatcher() {
                   <button 
                     onClick={handleBuyerMatch}
                     disabled={loading}
-                    className="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-4 rounded-2xl shadow-lg shadow-emerald-500/20 transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
+                    className="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-4 rounded-2xl shadow-lg shadow-indigo-500/20 transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
                   >
                     {loading ? <Activity className="animate-spin" /> : <Zap size={18} />}
                     {loading ? 'AI AGENTS RUNNING...' : 'FIND MATERIALS WITH AI'}
@@ -340,7 +340,7 @@ export default function AiMatcher() {
               ) : (
                 <>
                   <h3 className="text-lg font-bold mb-6 flex items-center">
-                     <Search size={20} className="mr-2 text-emerald-500" />
+                     <Search size={20} className="mr-2 text-purple-500" />
                      {mode === 'select' ? 'Select Resource' : 'Waste Snapshot'}
                   </h3>
 
@@ -353,7 +353,7 @@ export default function AiMatcher() {
                          <select 
                            value={selectedListingId} 
                            onChange={(e) => setSelectedListingId(e.target.value)}
-                           className="w-full px-4 py-3 border border-slate-300 dark:border-slate-700 rounded-xl focus:ring-emerald-500 focus:border-emerald-500 dark:bg-slate-950 font-bold"
+                           className="w-full px-4 py-3 border border-slate-300 dark:border-slate-700 rounded-xl focus:ring-emerald-500 focus:border-indigo-500 dark:bg-slate-950 font-bold"
                          >
                            <option value="">-- Select Listing --</option>
                            {listings.map(l => <option key={l._id} value={l._id}>{l.wasteType} ({l.quantity} {l.unit})</option>)}
@@ -366,7 +366,7 @@ export default function AiMatcher() {
                          className={`border-2 border-dashed rounded-2xl p-4 text-center cursor-pointer transition-all ${previewUrl ? 'border-emerald-500 bg-emerald-50/10' : 'border-slate-300 dark:border-slate-700 hover:border-emerald-400'}`}
                          onClick={() => fileInputRef.current?.click()}
                        >
-                         <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handlePhotoChange} />
+                         <input type="file" ref={fileInputRef} className="hidden focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all" accept="image/*" onChange={handlePhotoChange} />
                          {previewUrl ? (
                            <img src={previewUrl} className="w-full h-40 object-cover rounded-xl shadow-sm" alt="Preview" />
                          ) : (
@@ -399,7 +399,7 @@ export default function AiMatcher() {
                   <button 
                     onClick={handleFindMatches}
                     disabled={loading}
-                    className="w-full mt-8 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-4 rounded-2xl shadow-lg shadow-emerald-500/20 transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
+                    className="w-full mt-8 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-4 rounded-2xl shadow-lg shadow-indigo-500/20 transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
                   >
                     {loading ? <Activity className="animate-spin" /> : <Zap size={18} />}
                     {loading ? 'AI AGENTS RUNNING...' : 'FIND BUYERS WITH AI'}
@@ -415,12 +415,12 @@ export default function AiMatcher() {
              {loading ? (
                 <motion.div 
                   initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                  className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl md:rounded-3xl p-8 md:p-12 text-center flex flex-col items-center justify-center min-h-[300px] md:min-h-[400px]"
+                  className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl md:rounded-2xl p-8 md:p-12 text-center flex flex-col items-center justify-center min-h-[300px] md:min-h-[400px]"
                 >
 
                    <div className="relative mb-8">
                       <div className="w-24 h-24 rounded-full border-4 border-emerald-100 dark:border-emerald-500/10 border-t-emerald-500 animate-spin" />
-                      <Cpu className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-emerald-500" size={32} />
+                      <Cpu className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-purple-500" size={32} />
                    </div>
                    <h2 className="text-2xl font-bold mb-2">Gemini 1.5 Flash Analysis</h2>
                    <p className="text-slate-500 max-w-sm">Comparing chemical fingerprints and industrial profiles across 2,400+ verified buyers...</p>
@@ -439,22 +439,22 @@ export default function AiMatcher() {
                     <motion.div 
                       key={i} 
                       initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.1 }}
-                      className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm group hover:shadow-xl hover:border-emerald-500/30 transition-all relative overflow-hidden"
+                      className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm group hover:shadow-xl hover:border-emerald-500/30 transition-all relative overflow-hidden"
                     >
                        <div className="absolute top-0 right-0 p-8 opacity-[0.03] pointer-events-none group-hover:scale-110 transition-transform">
-                          <Leaf size={120} className="text-emerald-500" />
+                          <Leaf size={120} className="text-purple-500" />
                        </div>
 
                        <div className="flex flex-col sm:flex-row gap-4 md:gap-6 relative z-10">
                           <div className="flex-shrink-0 w-20 h-20 md:w-24 md:h-24 bg-slate-50 dark:bg-slate-950 rounded-2xl border border-slate-100 dark:border-slate-800 flex flex-col items-center justify-center self-start sm:self-center">
-                             <div className="text-2xl md:text-3xl font-black text-emerald-500">{match.compatibilityScore}%</div>
+                             <div className="text-2xl md:text-3xl font-black text-purple-500">{match.compatibilityScore}%</div>
                              <div className="text-[8px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mt-1">Match</div>
                           </div>
 
                           <div className="flex-1">
                              <div className="flex justify-between items-start mb-2">
                                 <div>
-                                   <h3 className="text-xl font-bold text-slate-900 dark:text-white group-hover:text-emerald-500 transition-colors">
+                                   <h3 className="text-xl font-bold text-slate-900 dark:text-white group-hover:text-purple-500 transition-colors">
                                      {role === 'buyer' ? (match.sellerName || 'Verified Seller') : (match.buyerName || 'Industrial Consumer')}
                                    </h3>
                                    <div className="flex items-center text-xs text-slate-500 font-medium">
@@ -499,7 +499,7 @@ export default function AiMatcher() {
                               {match.regulatoryComplianceNote && (
                                 <div className="mt-4 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-700/50">
                                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center mb-1">
-                                    <ShieldCheck size={12} className="mr-1 text-emerald-500" /> Regulatory Compliance (HW Rules 2016)
+                                    <ShieldCheck size={12} className="mr-1 text-purple-500" /> Regulatory Compliance (HW Rules 2016)
                                   </p>
                                   <p className="text-[10px] text-slate-500 italic leading-tight">
                                     {match.regulatoryComplianceNote}
@@ -528,7 +528,7 @@ export default function AiMatcher() {
                   ))}
                </motion.div>
              ) : completedMatch ? (
-               <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="bg-emerald-500 text-slate-950 rounded-2xl md:rounded-3xl p-6 md:p-12 text-center flex flex-col items-center">
+               <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="bg-emerald-500 text-slate-950 rounded-2xl md:rounded-2xl p-6 md:p-12 text-center flex flex-col items-center">
                   <div className="w-16 h-16 md:w-20 md:h-20 bg-white/20 rounded-full flex items-center justify-center mb-6">
                      <CheckCircle size={32} className="text-white" />
                   </div>
@@ -561,7 +561,7 @@ export default function AiMatcher() {
                   </button>
                </motion.div>
              ) : (
-                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl md:rounded-3xl p-8 md:p-12 text-center flex flex-col items-center justify-center min-h-[300px] md:min-h-[400px]">
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl md:rounded-2xl p-8 md:p-12 text-center flex flex-col items-center justify-center min-h-[300px] md:min-h-[400px]">
                    <Activity size={48} className="text-slate-200 mb-4" />
                    <h3 className="text-xl font-bold text-slate-400">Ready to Match</h3>
                    <p className="text-slate-500 text-sm">Select a resource on the left to activate AI agents.</p>

@@ -55,7 +55,7 @@ export default function SellerDashboard() {
 
   if (loading) return (
     <div className="flex justify-center items-center h-64 text-slate-500">
-      <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-emerald-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+      <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-purple-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
       </svg>
@@ -67,36 +67,36 @@ export default function SellerDashboard() {
     <div className="max-w-7xl mx-auto space-y-8">
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight mb-2">My Seller Dashboard</h1>
-          <p className="text-slate-500 dark:text-slate-400">Manage your industrial byproducts and secondary resources.</p>
+          <h1 className="text-3xl font-bold tracking-tight mb-2 text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400">My Seller Dashboard</h1>
+          <p className="text-slate-500 dark:text-gray-400">Manage your industrial byproducts and secondary resources.</p>
         </div>
         <Link 
           to="/offload" 
-          className="bg-emerald-500 hover:bg-emerald-400 text-slate-900 px-6 py-2.5 rounded-lg font-bold transition-all shadow-sm hover:-translate-y-0.5 inline-flex items-center justify-center shrink-0"
+          className="bg-emerald-500 hover:bg-emerald-400 text-slate-900 dark:bg-gradient-to-r dark:from-emerald-500 dark:to-green-500 dark:text-white px-6 py-2.5 rounded-lg font-bold transition-all duration-300 ease-in-out shadow-sm dark:shadow-[0_0_20px_rgba(16,185,129,0.5)] hover:scale-[1.03] inline-flex items-center justify-center shrink-0"
         >
           <PackagePlus size={20} className="mr-2" /> List New Waste
         </Link>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm flex flex-col justify-center relative overflow-hidden">
-           <div className="absolute top-0 right-0 p-4 opacity-10 text-emerald-500"><TrendingUp size={48} /></div>
+        <div className="bg-white dark:bg-white/5 dark:backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-2xl p-6 shadow-sm flex flex-col justify-center relative overflow-hidden transition-all duration-300 ease-in-out hover:scale-[1.03] dark:hover:shadow-[0_0_30px_rgba(16,185,129,0.3)]">
+           <div className="absolute top-0 right-0 p-4 opacity-10 text-purple-500"><TrendingUp size={48} /></div>
            <div className="text-sm font-semibold text-slate-500 mb-1 z-10 uppercase tracking-wider">Tons Listed This Month</div>
            <div className="text-4xl font-black text-slate-900 dark:text-white z-10 tracking-tight">{currentMonthTons.toFixed(1)}</div>
         </div>
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm flex flex-col justify-center relative overflow-hidden">
+        <div className="bg-white dark:bg-white/5 dark:backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-2xl p-6 shadow-sm flex flex-col justify-center relative overflow-hidden transition-all duration-300 ease-in-out hover:scale-[1.03] dark:hover:shadow-[0_0_30px_rgba(16,185,129,0.3)]">
            <div className="absolute top-0 right-0 p-4 opacity-10 text-slate-500"><Activity size={48} /></div>
            <div className="text-sm font-semibold text-slate-500 mb-1 z-10 uppercase tracking-wider">Active Listings</div>
            <div className="text-4xl font-black text-slate-900 dark:text-white z-10 tracking-tight">{activeCount}</div>
         </div>
-        <div className="bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-100 dark:border-emerald-500/20 rounded-2xl p-6 shadow-sm flex flex-col justify-center relative overflow-hidden">
+        <div className="bg-emerald-50 dark:bg-emerald-500/10 dark:backdrop-blur-xl border border-purple-100 dark:border-purple-500/20 rounded-2xl p-6 shadow-sm flex flex-col justify-center relative overflow-hidden transition-all duration-300 ease-in-out hover:scale-[1.03] dark:hover:shadow-[0_0_30px_rgba(16,185,129,0.3)]">
            <div className="absolute top-0 right-0 p-4 opacity-20 text-emerald-600 dark:text-emerald-400"><Cpu size={48} /></div>
            <div className="text-sm font-semibold text-emerald-800 dark:text-emerald-400 mb-1 z-10 uppercase tracking-wider">AI Matched</div>
            <div className="text-4xl font-black text-emerald-900 dark:text-white z-10 tracking-tight">{matchedCount}</div>
         </div>
       </div>
 
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden">
+      <div className="bg-white dark:bg-white/5 dark:backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-2xl shadow-sm overflow-hidden">
         <div className="p-6 border-b border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
             <h2 className="text-lg font-bold">My Listings Directory</h2>
             <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest md:hidden">Scroll left to view more →</div>
@@ -114,7 +114,7 @@ export default function SellerDashboard() {
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="bg-slate-50 dark:bg-slate-950/50 text-xs uppercase tracking-wider text-slate-500 border-b border-slate-200 dark:border-slate-800">
+                <tr className="bg-slate-50 dark:bg-white/5 text-xs uppercase tracking-wider text-slate-500 dark:text-gray-400 border-b border-slate-200 dark:border-white/10">
                   <th className="px-6 py-4 font-semibold">Waste Category</th>
                   <th className="px-6 py-4 font-semibold">Quantity</th>
                   <th className="px-6 py-4 font-semibold">Frequency</th>
@@ -124,7 +124,7 @@ export default function SellerDashboard() {
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
                 {listings.map((listing) => (
-                  <tr key={listing._id} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
+                  <tr key={listing._id} className="hover:bg-slate-50 dark:hover:bg-emerald-500/10 transition-colors">
                     <td className="px-6 py-4">
                       <div className="font-semibold text-slate-900 dark:text-white">{listing.wasteType}</div>
                       <div className="text-xs text-slate-500 truncate max-w-xs">{listing.compositionReport.substring(0, 40)}...</div>

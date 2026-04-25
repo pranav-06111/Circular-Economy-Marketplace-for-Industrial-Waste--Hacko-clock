@@ -114,13 +114,26 @@ router.post('/google', async (req: Request, res: Response): Promise<void> => {
     }
 
     const payload = await googleRes.json() as any;
+    
+    if (googleRes.status !== 200) {
+      console.error('Google token verification failed:', payload);
+      res.status(401).json({ error: 'Invalid Google token: ' + (payload.error_description || 'verification failed') });
+      return;
+    }
+
+    // Security check: verify audience
+    if (payload.aud !== GOOGLE_CLIENT_ID) {
+      console.error('Google Client ID mismatch. Payload aud:', payload.aud, 'Expected:', GOOGLE_CLIENT_ID);
+      res.status(401).json({ error: 'Google Client ID mismatch' });
+      return;
+    }
 
     // Log for debugging
-    console.log('Google auth payload aud:', payload.aud);
-    console.log('Google auth email:', payload.email);
+    console.log('Google auth successful for:', payload.email);
 
     // Ensure we got a valid payload with email and sub
     if (!payload.email || !payload.sub) {
+      console.error('Incomplete Google payload:', payload);
       res.status(401).json({ error: 'Invalid Google token payload' });
       return;
     }

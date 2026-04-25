@@ -209,7 +209,7 @@ export default function Profile() {
                 <select
                   value={form.industryType || 'Manufacturing'}
                   onChange={e => handleChange('industryType', e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-emerald-500 focus:border-emerald-500 dark:bg-slate-950 text-sm"
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-emerald-500 focus:border-indigo-500 dark:bg-slate-950 text-sm"
                 >
                   {industryTypes.map(t => <option key={t} value={t}>{t}</option>)}
                 </select>
@@ -224,7 +224,7 @@ export default function Profile() {
                 <select
                   value={form.companySize || ''}
                   onChange={e => handleChange('companySize', e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-emerald-500 focus:border-emerald-500 dark:bg-slate-950 text-sm"
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-emerald-500 focus:border-indigo-500 dark:bg-slate-950 text-sm"
                 >
                   <option value="">Select size</option>
                   <option value="Small (1-50)">Small (1-50)</option>
@@ -254,7 +254,7 @@ export default function Profile() {
                   onChange={e => handleChange('address', e.target.value)}
                   rows={2}
                   placeholder="Plot No. 12, MIDC Industrial Area, Pune 411018"
-                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-emerald-500 focus:border-emerald-500 dark:bg-slate-950 text-sm"
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-emerald-500 focus:border-indigo-500 dark:bg-slate-950 text-sm"
                 />
               ) : (
                 <p className="text-sm font-medium">{(profile as any).address || '—'}</p>
@@ -269,7 +269,7 @@ export default function Profile() {
                   onChange={e => handleChange('bio', e.target.value)}
                   rows={3}
                   placeholder="Tell us about your company and sustainability goals..."
-                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-emerald-500 focus:border-emerald-500 dark:bg-slate-950 text-sm"
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-emerald-500 focus:border-indigo-500 dark:bg-slate-950 text-sm"
                 />
               ) : (
                 <p className="text-sm font-medium">{(profile as any).bio || '—'}</p>
@@ -362,7 +362,7 @@ export default function Profile() {
                   <select
                     value={form.preferredSupplyRadius || ''}
                     onChange={e => handleChange('preferredSupplyRadius', e.target.value)}
-                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-emerald-500 focus:border-emerald-500 dark:bg-slate-950 text-sm"
+                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-emerald-500 focus:border-indigo-500 dark:bg-slate-950 text-sm"
                   >
                     <option value="">Select radius</option>
                     <option value="50km">50 km</option>
@@ -402,7 +402,7 @@ function FieldRow({ label, value, field, editMode, onChange, placeholder, disabl
           value={value}
           onChange={e => onChange(field, e.target.value)}
           placeholder={placeholder}
-          className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-emerald-500 focus:border-emerald-500 dark:bg-slate-950 text-sm"
+          className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-emerald-500 focus:border-indigo-500 dark:bg-slate-950 text-sm"
         />
       ) : (
         <p className="text-sm font-medium">{value || '—'}</p>

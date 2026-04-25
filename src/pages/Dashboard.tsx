@@ -27,15 +27,15 @@ type CardProps = {
 
 const Card: React.FC<CardProps> = ({ icon: Icon, title, value, sub }) => {
   return (
-    <div className="p-5 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 hover:scale-[1.02] transition-all duration-300 shadow-sm">
+    <div className="p-5 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 dark:backdrop-blur-xl hover:scale-[1.03] transition-all duration-300 ease-in-out shadow-sm dark:hover:shadow-[0_0_30px_rgba(16,185,129,0.3)]">
       <div className="flex items-center justify-between mb-3">
-        <div className="p-2 rounded-lg bg-emerald-50 dark:bg-emerald-900/20">
-          <Icon className="w-5 h-5 text-emerald-500" />
+        <div className="p-2 rounded-lg bg-emerald-50 dark:bg-emerald-500/20 dark:shadow-[0_0_15px_rgba(16,185,129,0.4)]">
+          <Icon className="w-5 h-5 text-purple-500" />
         </div>
       </div>
       <h3 className="text-sm text-gray-600 dark:text-gray-400">{title}</h3>
       <p className="text-2xl font-bold mt-1">{value}</p>
-      <p className="text-xs text-emerald-500 mt-1">{sub}</p>
+      <p className="text-xs text-purple-500 mt-1">{sub}</p>
     </div>
   )
 }
@@ -76,7 +76,7 @@ const Dashboard: React.FC = () => {
         {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 gap-4">
           <div>
-            <h1 className="text-3xl font-bold">
+            <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400">
               Waste Intelligence Dashboard
             </h1>
             <p className="text-gray-600 dark:text-gray-400">
@@ -85,7 +85,7 @@ const Dashboard: React.FC = () => {
           </div>
           <button 
             onClick={() => navigate('/offload')}
-            className="bg-emerald-500 hover:bg-emerald-400 text-slate-900 font-bold px-6 py-2.5 rounded-xl transition-all shadow-sm flex items-center"
+            className="bg-emerald-500 hover:bg-emerald-400 text-slate-900 dark:bg-gradient-to-r dark:from-emerald-500 dark:to-green-500 dark:text-white font-bold px-6 py-2.5 rounded-xl transition-all duration-300 ease-in-out shadow-sm dark:shadow-[0_0_20px_rgba(16,185,129,0.5)] hover:scale-[1.03] flex items-center"
           >
             <Plus size={20} className="mr-2" /> List New Waste
           </button>
@@ -129,7 +129,7 @@ const Dashboard: React.FC = () => {
         <div className="grid lg:grid-cols-3 gap-6">
 
           {/* My Listings */}
-          <div className="lg:col-span-2 bg-white dark:bg-gray-900 p-6 rounded-xl border border-gray-200 dark:border-gray-800">
+          <div className="lg:col-span-2 bg-white dark:bg-white/5 dark:backdrop-blur-xl p-6 rounded-xl border border-gray-200 dark:border-white/10">
             <h2 className="text-lg font-semibold mb-4 flex justify-between items-center">
               <span>My Recent Listings</span>
             </h2>
@@ -139,12 +139,12 @@ const Dashboard: React.FC = () => {
             ) : listings.length === 0 ? (
               <div className="text-sm text-slate-500 py-8 text-center border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-xl">
                 You haven't listed any waste yet.<br/>
-                <button onClick={() => navigate('/offload')} className="mt-2 text-emerald-500 hover:underline">Click here to start.</button>
+                <button onClick={() => navigate('/offload')} className="mt-2 text-purple-500 hover:underline">Click here to start.</button>
               </div>
             ) : (
               <ul className="space-y-4">
                 {listings.slice(0, 5).map((listing, i) => (
-                  <li key={i} className="flex flex-col md:flex-row md:items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-100 dark:border-slate-800 gap-4">
+                  <li key={i} className="flex flex-col md:flex-row md:items-center justify-between p-4 bg-slate-50 dark:bg-white/5 rounded-lg border border-slate-100 dark:border-white/10 gap-4">
                     <div className="flex items-center gap-3">
                       <div className={`w-2 h-2 rounded-full ${listing.status === 'Matched' ? 'bg-amber-500' : 'bg-emerald-500'}`}></div>
                       <div>
@@ -153,10 +153,10 @@ const Dashboard: React.FC = () => {
                       </div>
                     </div>
                     <div className="text-xs text-right">
-                       <span className="bg-white dark:bg-slate-900 px-2 py-1 rounded border border-slate-200 dark:border-slate-700 shadow-sm block mb-1">
+                       <span className="bg-white dark:bg-white/5 px-2 py-1 rounded border border-slate-200 dark:border-white/10 shadow-sm block mb-1">
                          {listing.status || 'Active'}
                        </span>
-                       <span className="text-emerald-500 font-medium">{listing.co2Savings}t CO₂</span>
+                       <span className="text-purple-500 font-medium">{listing.co2Savings}t CO₂</span>
                     </div>
                   </li>
                 ))}
@@ -168,7 +168,7 @@ const Dashboard: React.FC = () => {
           <div className="space-y-6">
 
             {/* Smart Actions */}
-            <div className="bg-white dark:bg-gray-900 p-6 rounded-xl border border-gray-200 dark:border-gray-800">
+            <div className="bg-white dark:bg-white/5 dark:backdrop-blur-xl p-6 rounded-xl border border-gray-200 dark:border-white/10">
               <h2 className="text-lg font-semibold mb-4">
                 Smart Actions
               </h2>
@@ -182,7 +182,7 @@ const Dashboard: React.FC = () => {
             </div>
 
             {/* Compliance */}
-            <div className="bg-white dark:bg-gray-900 p-6 rounded-xl border border-gray-200 dark:border-gray-800">
+            <div className="bg-white dark:bg-white/5 dark:backdrop-blur-xl p-6 rounded-xl border border-gray-200 dark:border-white/10">
               <h2 className="text-lg font-semibold mb-4">
                 Compliance Status
               </h2>

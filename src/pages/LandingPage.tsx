@@ -387,7 +387,7 @@ export default function LandingPage() {
                     <div className="w-14 h-14 rounded-2xl bg-white/[0.04] border border-white/[0.08] flex items-center justify-center text-emerald-400 relative z-10 backdrop-blur-sm group-hover:border-emerald-500/25 group-hover:bg-emerald-500/10 transition-all duration-300 group-hover:shadow-[0_0_30px_rgba(16,185,129,0.15)]">
                       <Icon className="w-5 h-5" />
                     </div>
-                    <div className="absolute -top-2 -right-2 text-[10px] font-bold text-emerald-500/50 tabular-nums">
+                    <div className="absolute -top-2 -right-2 text-[10px] font-bold text-purple-500/50 tabular-nums">
                       {step.num}
                     </div>
                   </div>
@@ -507,7 +507,7 @@ export default function LandingPage() {
                 <input
                   type="email"
                   placeholder="Enter your email"
-                  className="w-full bg-white/[0.03] border border-white/[0.08] rounded-xl px-4 py-3 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 transition-all"
+                  className="w-full bg-white/[0.03] border border-white/[0.08] rounded-xl px-4 py-3 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-indigo-500/50 focus:ring-2 focus:ring-indigo-500 border-slate-200 dark:border-slate-700/50 transition-all"
                 />
                 <button
                   type="submit"

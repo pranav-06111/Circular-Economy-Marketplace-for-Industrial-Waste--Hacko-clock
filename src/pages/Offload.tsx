@@ -182,7 +182,7 @@ export default function Offload() {
   if (success) {
     return (
       <div className="max-w-2xl mx-auto py-20 text-center">
-        <CheckCircle2 className="w-20 h-20 text-emerald-500 mx-auto mb-6" />
+        <CheckCircle2 className="w-20 h-20 text-purple-500 mx-auto mb-6" />
         <h2 className="text-3xl font-bold mb-4">Listing Successful!</h2>
         <p className="text-slate-500 mb-8 max-w-md mx-auto">
           Our AI has analyzed the composition against environmental rules. Buyers can now see your listing.
@@ -203,19 +203,21 @@ export default function Offload() {
     <div className="max-w-5xl mx-auto">
       <div className="mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold tracking-tight mb-2 flex items-center">
-            <Factory className="mr-3 text-emerald-500" />
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight mb-2 flex items-center text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400">
+            <div className="p-2 rounded-xl dark:bg-emerald-500/20 dark:shadow-[0_0_15px_rgba(16,185,129,0.4)] mr-3 shrink-0 flex items-center justify-center">
+              <Factory className="text-purple-500" />
+            </div>
             List Industrial Waste
           </h1>
-          <p className="text-sm md:text-base text-slate-500 dark:text-slate-400">Offer your byproduct to verified buyers. Upload photos for instant AI regulatory analysis.</p>
+          <p className="text-sm md:text-base text-slate-500 dark:text-gray-400">Offer your byproduct to verified buyers. Upload photos for instant AI regulatory analysis.</p>
         </div>
-        <button type="button" onClick={clearDraft} className="text-slate-400 hover:text-rose-500 text-sm flex items-center font-medium transition-colors">
+        <button type="button" onClick={clearDraft} className="text-slate-400 hover:text-rose-500 text-sm flex items-center font-medium transition-colors" disabled={loading}>
           <Trash2 size={16} className="mr-1" /> Clear Draft
         </button>
       </div>
 
 
-      <form onSubmit={handleSubmit} className="mt-8 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden">
+      <form onSubmit={handleSubmit} className="mt-8 bg-white dark:bg-white/5 dark:backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-2xl shadow-sm overflow-hidden">
         <div className="p-6 md:p-8 space-y-8">
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -224,7 +226,7 @@ export default function Offload() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Waste Category</label>
-                  <select name="wasteType" value={formData.wasteType} onChange={handleTextChange} className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-emerald-500 focus:border-emerald-500 dark:bg-slate-950">
+                  <select name="wasteType" value={formData.wasteType} onChange={handleTextChange} className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-emerald-500 focus:border-indigo-500 dark:bg-slate-950">
                     <optgroup label="Non-Hazardous & Recyclables">
                       {nonHazardousCategories.map(c => <option key={c} value={c}>{c}</option>)}
                     </optgroup>
@@ -236,7 +238,7 @@ export default function Offload() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Frequency</label>
-                  <select name="frequency" value={formData.frequency} onChange={handleTextChange} className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-emerald-500 focus:border-emerald-500 dark:bg-slate-950">
+                  <select name="frequency" value={formData.frequency} onChange={handleTextChange} className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-emerald-500 focus:border-indigo-500 dark:bg-slate-950">
                     {frequencies.map(f => <option key={f} value={f}>{f}</option>)}
                   </select>
                 </div>
@@ -245,11 +247,11 @@ export default function Offload() {
               <div className="flex gap-4">
                 <div className="flex-1">
                   <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Available Quantity</label>
-                  <input required name="quantity" type="number" min="0.1" step="0.1" value={formData.quantity} onChange={handleTextChange} placeholder="e.g. 5.5" className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-emerald-500 focus:border-emerald-500 dark:bg-slate-950 font-mono" />
+                  <input required name="quantity" type="number" min="0.1" step="0.1" value={formData.quantity} onChange={handleTextChange} placeholder="e.g. 5.5" className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-emerald-500 focus:border-indigo-500 dark:bg-slate-950 font-mono" />
                 </div>
                 <div className="w-1/3">
                   <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Unit</label>
-                  <select name="unit" value={formData.unit} onChange={handleTextChange} className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-emerald-500 focus:border-emerald-500 dark:bg-slate-950">
+                  <select name="unit" value={formData.unit} onChange={handleTextChange} className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-emerald-500 focus:border-indigo-500 dark:bg-slate-950">
                     {units.map(u => <option key={u} value={u}>{u}</option>)}
                   </select>
                 </div>
@@ -258,11 +260,11 @@ export default function Offload() {
               <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Origin City/Location</label>
-                    <input required name="location" value={formData.location} onChange={handleTextChange} placeholder="e.g. Pune, MIDC Industrial Area" className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-emerald-500 focus:border-emerald-500 dark:bg-slate-950" />
+                    <input required name="location" value={formData.location} onChange={handleTextChange} placeholder="e.g. Pune, MIDC Industrial Area" className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-emerald-500 focus:border-indigo-500 dark:bg-slate-950" />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Physical Form</label>
-                    <select name="physicalForm" value={formData.physicalForm} onChange={handleTextChange} className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-emerald-500 focus:border-emerald-500 dark:bg-slate-950">
+                    <select name="physicalForm" value={formData.physicalForm} onChange={handleTextChange} className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-emerald-500 focus:border-indigo-500 dark:bg-slate-950">
                         {physicalForms.map(f => <option key={f} value={f}>{f}</option>)}
                     </select>
                   </div>
@@ -270,17 +272,17 @@ export default function Offload() {
 
               <div>
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Description</label>
-                <textarea required name="description" rows={2} value={formData.description} onChange={handleTextChange} placeholder="Describe packaging and impurities." className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-emerald-500 focus:border-emerald-500 dark:bg-slate-950" />
+                <textarea required name="description" rows={2} value={formData.description} onChange={handleTextChange} placeholder="Describe packaging and impurities." className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-emerald-500 focus:border-indigo-500 dark:bg-slate-950" />
               </div>
 
                <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Source Industry</label>
-                    <input name="sourceIndustry" value={formData.sourceIndustry} onChange={handleTextChange} placeholder="e.g. Automotive, Pharma" className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-emerald-500 focus:border-emerald-500 dark:bg-slate-950 text-sm" />
+                    <input name="sourceIndustry" value={formData.sourceIndustry} onChange={handleTextChange} placeholder="e.g. Automotive, Pharma" className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-emerald-500 focus:border-indigo-500 dark:bg-slate-950 text-sm" />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Process Description</label>
-                    <input name="processDescription" value={formData.processDescription} onChange={handleTextChange} placeholder="e.g. Generated during injection molding" className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-emerald-500 focus:border-emerald-500 dark:bg-slate-950 text-sm" />
+                    <input name="processDescription" value={formData.processDescription} onChange={handleTextChange} placeholder="e.g. Generated during injection molding" className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-emerald-500 focus:border-indigo-500 dark:bg-slate-950 text-sm" />
                   </div>
                </div>
 
@@ -295,9 +297,9 @@ export default function Offload() {
                       onChange={(e) => setContaminantInput(e.target.value)} 
                       onKeyDown={addContaminant}
                       placeholder="e.g. Oil, Dirt (Press Enter)" 
-                      className="flex-1 px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-emerald-500 focus:border-emerald-500 dark:bg-slate-950 text-sm" 
+                      className="flex-1 px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-emerald-500 focus:border-indigo-500 dark:bg-slate-950 text-sm" 
                     />
-                    <button type="button" onClick={addContaminant} className="px-3 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 rounded-lg text-sm font-medium">Add</button>
+                    <button type="button" onClick={addContaminant} className="px-3 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 rounded-lg text-sm font-medium" disabled={loading}>Add</button>
                   </div>
                   <div className="flex flex-wrap gap-2">
                       {contaminants.map(c => (
@@ -313,7 +315,7 @@ export default function Offload() {
                     <div className="flex gap-2 mb-3">
                         <input value={compKey} onChange={(e) => setCompKey(e.target.value)} placeholder="Material (e.g. PET)" className="flex-1 px-3 py-1.5 border border-slate-300 dark:border-slate-700 rounded md:text-sm" />
                         <input value={compVal} type="number" onChange={(e) => setCompVal(e.target.value)} placeholder="%" className="w-16 px-3 py-1.5 border border-slate-300 dark:border-slate-700 rounded md:text-sm" />
-                        <button type="button" onClick={addComposition} className="px-2 py-1.5 bg-emerald-100 hover:bg-emerald-200 text-emerald-800 rounded"><Plus size={16}/></button>
+                        <button type="button" onClick={addComposition} className="px-2 py-1.5 bg-emerald-100 hover:bg-emerald-200 text-emerald-800 rounded" disabled={loading}><Plus size={16}/></button>
                     </div>
                     {Object.keys(composition).length > 0 && (
                         <div className="space-y-1">
@@ -338,13 +340,13 @@ export default function Offload() {
                   {requiresPH && (
                       <div>
                         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">pH Level</label>
-                        <input name="pH" type="number" step="0.1" value={formData.pH} onChange={handleTextChange} placeholder="e.g. 7.5" className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-emerald-500 focus:border-emerald-500 dark:bg-slate-950 font-mono text-sm" />
+                        <input name="pH" type="number" step="0.1" value={formData.pH} onChange={handleTextChange} placeholder="e.g. 7.5" className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-emerald-500 focus:border-indigo-500 dark:bg-slate-950 font-mono text-sm" />
                       </div>
                   )}
                   {requiresFlashPoint && (
                       <div>
                         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Flash Point (°C)</label>
-                        <input name="flashPoint" type="number" value={formData.flashPoint} onChange={handleTextChange} placeholder="e.g. 60" className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-emerald-500 focus:border-emerald-500 dark:bg-slate-950 font-mono text-sm" />
+                        <input name="flashPoint" type="number" value={formData.flashPoint} onChange={handleTextChange} placeholder="e.g. 60" className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-emerald-500 focus:border-indigo-500 dark:bg-slate-950 font-mono text-sm" />
                       </div>
                   )}
                 </div>
@@ -354,20 +356,20 @@ export default function Offload() {
           
           <div>
             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                Upload Photos <span className="text-emerald-500 text-xs font-semibold">(Max 5)</span>
+                Upload Photos <span className="text-purple-500 text-xs font-semibold">(Max 5)</span>
             </label>
             <div 
               className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-colors ${files.length > 0 ? 'border-emerald-500 bg-emerald-50/50 dark:bg-emerald-500/5' : 'border-slate-300 dark:border-slate-700 hover:border-emerald-400 dark:hover:border-emerald-500 hover:bg-slate-50 dark:hover:bg-slate-800'}`}
               onClick={() => fileInputRef.current?.click()}
             >
-              <input type="file" ref={fileInputRef} className="hidden" accept="image/*" multiple onChange={handleFileChange} />
+              <input type="file" ref={fileInputRef} className="hidden focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all" accept="image/*" multiple onChange={handleFileChange} />
               
               {previewUrls.length > 0 ? (
                 <div className="flex flex-wrap gap-4 justify-center">
                    {previewUrls.map((url, i) => (
                        <img key={i} src={url} alt={`Preview ${i}`} className="h-24 w-24 object-cover rounded shadow-sm border border-emerald-200" />
                    ))}
-                   <div className="h-24 w-24 flex items-center justify-center border-2 border-dashed border-emerald-300 text-emerald-500 rounded hover:bg-emerald-50 cursor-pointer">
+                   <div className="h-24 w-24 flex items-center justify-center border-2 border-dashed border-emerald-300 text-purple-500 rounded hover:bg-emerald-50 cursor-pointer">
                        <Plus size={24} />
                    </div>
                 </div>
@@ -386,7 +388,7 @@ export default function Offload() {
               type="button" 
               onClick={handleAnalyzeAI}
               disabled={aiLoading || files.length === 0}
-              className="mt-4 w-full bg-slate-900 dark:bg-slate-800 hover:bg-slate-800 dark:hover:bg-slate-700 text-white py-3 rounded-xl font-bold flex items-center justify-center transition-colors disabled:opacity-50 border border-slate-700"
+              className="mt-4 w-full bg-slate-900 dark:bg-slate-800 hover:bg-slate-800 dark:hover:bg-slate-700 text-white py-3 rounded-xl font-bold flex items-center justify-center transition-all duration-300 ease-in-out hover:scale-[1.01] disabled:opacity-50 border border-slate-700"
             >
               {aiLoading ? (
                 <span className="flex items-center gap-2">
@@ -452,12 +454,12 @@ export default function Offload() {
 
         </div>
         
-        <div className="px-6 py-4 bg-slate-50 dark:bg-slate-950/50 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
+        <div className="px-6 py-4 bg-slate-50 dark:bg-white/5 border-t border-slate-200 dark:border-white/10 flex items-center justify-between">
           <span className="text-sm text-slate-500">Drafts are saved automatically</span>
           <button 
             type="submit" 
             disabled={loading || files.length === 0}
-            className="bg-emerald-500 hover:bg-emerald-400 text-slate-900 px-8 py-3 rounded-lg font-bold transition-all disabled:opacity-50 flex items-center shadow-[0_4px_14px_0_rgba(16,185,129,0.39)] hover:shadow-[0_6px_20px_rgba(16,185,129,0.23)]"
+            className="bg-emerald-500 hover:bg-emerald-400 text-slate-900 dark:bg-gradient-to-r dark:from-emerald-500 dark:to-green-500 dark:text-white px-8 py-3 rounded-lg font-bold transition-all duration-300 ease-in-out disabled:opacity-50 flex items-center shadow-[0_4px_14px_0_rgba(16,185,129,0.39)] hover:shadow-[0_6px_20px_rgba(16,185,129,0.23)] dark:shadow-[0_0_20px_rgba(16,185,129,0.5)] hover:scale-[1.03]"
           >
             {loading ? (
               <span className="flex items-center">
